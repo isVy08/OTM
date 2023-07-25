@@ -90,6 +90,7 @@ def train_epoch(X, model, optimizer, mask, imps, loader,
         F1 = model(X1)
         unif = torch.ones((batchsize,), device = device) / batchsize
         M = torch.zeros((batchsize, batchsize), device = device)
+        # VERSION 3
         for i in range(batchsize):
             for j in range(batchsize):
                 M[i, j] = loss_fn(X1[i:i+1, ], X2[j:j+1, ]) + loss_fn(F1[i:i+1,], X2[j:j+1,])
