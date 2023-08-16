@@ -104,13 +104,14 @@ def to_dag(B, graph_thres = 0.01, iter = False):
 
     def prune(B, graph_thres):
         B = np.copy(B)
-        B[np.abs(B) <= graph_thres] = 0    # Thresholding
+        B[np.abs(B) < graph_thres] = 0    # Thresholding
 
         B_bin = (abs(B) >= graph_thres).astype(np.float32)
 
         return B_bin
     
     if iter:
+        graph_thres = 0.01
         completed = False
         while not completed:
             B_processed_bin = prune(B, graph_thres)
@@ -332,3 +333,31 @@ class MetricsDAG(object):
         F1 = 2*(recall*precision)/(recall+precision)
 
         return precision, recall, F1
+
+def evaluate(X, B_true, model, mask, threshold, return_imps = False, return_edges = False, 
+                    X_true = None, prune = True):
+    if return_imps:
+        X_filled = X.detach().clone()
+        X_filled[mask.bool()] = model.imputer.imps
+
+        print(X_true[mask.bool()][:15])
+        print(X_filled[mask.bool()][:15])
+
+    B_est = model._adj()
+    B_est = B_est.detach().cpu().numpy()
+    # print(B_est.max(), np.abs(B_est).min(), np.abs(B_est).mean())
+    print(B_est.round(2))
+    
+    if prune:
+        _, B_out = postprocess(B_est, graph_thres = threshold)
+    else:
+        B_out = to_dag(B_est, threshold, False)
+    
+    if return_edges:
+        print_edges(B_out, 15)
+        print_edges(B_true, 15)
+    
+    print('Is DAG?', is_dag(B_out))
+    raw_result = MetricsDAG(B_out, B_true)
+    raw_result.display()
+    

@@ -60,6 +60,19 @@ def get_config(config_id):
             "ev": False
         }, 
 
+        6: {
+            'num_obs': 100,
+            'num_vars': 30,
+            'graph_type': 'ER',
+            'degree': 2, 
+            'noise_type': 'gaussian',
+            'miss_type': 'mcar',
+            'miss_percent': 0.0,
+            "sem_type": 'linear',
+            "ev": True
+        }, 
+        
+
     }
 
     return configs[config_id]
