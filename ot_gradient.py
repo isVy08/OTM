@@ -46,7 +46,7 @@ def _auto_ot(X_, W_):
     C = 0.5 * ot.dist(X,M, metric='sqeuclidean')
 
     # Optimal transport plan
-    unif = torch.ones((X.shape[0],)) #  / batch_size
+    unif = torch.ones((X.shape[0],)) / X.shape[0]
     P = ot.emd(unif, unif, C)
 
     loss = (C * P).mean() 

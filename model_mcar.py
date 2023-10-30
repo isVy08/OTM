@@ -24,7 +24,7 @@ class Criterion:
             
     def exact_ot_cost(self, x, y, cost_fn = 'mse'):
         batchsize, _  = x.shape
-        unif = torch.ones((batchsize,), device = x.device) / batchsize
+        unif = torch.ones((batchsize,), device = x.device) #  / batchsize
         
         if cost_fn != 'mse':
             M = torch.zeros((batchsize, batchsize), device = x.device)

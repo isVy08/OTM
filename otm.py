@@ -44,7 +44,7 @@ model = MissModel(X, mask, device, hidden_dims, config)
 
 model_path = f'models/{config["code"]}.pt'
 
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 # optimizer = torch.optim.LBFGS(model.parameters(), lr=1e-2, max_iter = 20)
 
 
@@ -67,11 +67,11 @@ if action == 'train':
     indices = list(range(X.shape[0]))
     loader = DataLoader(indices, batch_size=batchsize, shuffle=True)
 
-    from trainer import train_epoch, train_lbfgs
+    from trainer import train_epoch
     
     print('Training begins:')
     for i in range(niter):   
-        X_filled, loss = train_lbfgs(model, optimizer, loader, criterion)
+        X_filled, loss = train_epoch(model, optimizer, loader, criterion)
         
                 
         mae = MAE(X_filled, X_true, mask).item()
