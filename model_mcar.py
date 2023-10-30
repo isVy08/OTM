@@ -6,22 +6,6 @@ from utils.missing import nanmean
 from geomloss import SamplesLoss
 from utils.arch import MLP, linear_sequential
 
-
-class Imputer(nn.Module):
-    def __init__(self, data, mask):
-        super(Imputer, self).__init__()
-    
-        imps = (torch.randn(mask.shape, device = mask.device).float() + nanmean(data, 0))[mask.bool()]
-        self.imps = nn.Parameter(imps)
-
-        self.data = data 
-        self.mask = mask
-
-    def forward(self):
-        X_filled = self.data.detach().clone()
-        X_filled[self.mask.bool()] = self.imps
-        return X_filled
-
 class Criterion:
     def __init__(self, alpha, beta, gamma, ground_cost, methods, loss_fn):
         self.alpha = alpha 

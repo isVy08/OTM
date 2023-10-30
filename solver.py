@@ -80,8 +80,8 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, beta = None):
         print(f'Iteration {i} ...')
         params_new, w_new, h_new = None, None, None
         while rho < rho_max:  
-            # sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds, options={'maxiter': 1000})
-            sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds)
+            sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds, options={'maxiter': 5000})
+            # sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds)
             params_new = sol.x 
             w_new = params_new[:2*d*d]
             imps_new = params_new[2*d*d:]
