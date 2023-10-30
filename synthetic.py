@@ -5,7 +5,7 @@ import numpy as np
 from scipy.special import expit as sigmoid
 
 from utils.data import produce_NA
-from utils.utils import is_dag
+from utils.eval import is_dag
 import os
 from utils.io import load_pickle, write_pickle
 from sklearn.preprocessing import scale 
@@ -21,7 +21,7 @@ class SyntheticDataset:
     """
     _logger = logging.getLogger(__name__)
 
-    def __init__(self, n, d, graph_type, degree, noise_type,
+    def __init__(self, n, d, config_code, graph_type, degree, noise_type,
                  miss_type='mcar', miss_percent=0.1, sem_type='linear',
                  equal_variances=True, mnar_type="logistic", p_obs=0.3, mnar_quantile_q=0.3):
         """Initialize self.
@@ -48,7 +48,7 @@ class SyntheticDataset:
         self.equal_variances = equal_variances
         self.mnar_quantile_q = mnar_quantile_q
         self.B_ranges = ((-2.0, -0.5), (0.5, 2.0))
-        self.data_path = f'./dataset/{graph_type}_{noise_type}_{miss_type}_{sem_type}.pickle'
+        self.data_path = f'./dataset/{config_code}.pickle'
 
         self._setup()
         self._logger.debug("Finished setting up dataset class.")
@@ -56,8 +56,10 @@ class SyntheticDataset:
     def _setup(self):
         """Generate B_bin, B and X."""
         if os.path.isfile(self.data_path):
+            print('Loading data ...')
             self.B_bin, self.B, self.X_true, self.Omega, self.X, self.mask = load_pickle(self.data_path)
         else:
+            print('Generating and Saving data ...')
             self.B_bin = SyntheticDataset.simulate_random_dag(self.d,
                                                             self.degree,
                                                             self.graph_type)
@@ -98,6 +100,7 @@ class SyntheticDataset:
             return nx.to_numpy_matrix(G)
 
         p = float(degree) / (d - 1)
+        # Probability for edge creation
         G_und = nx.generators.erdos_renyi_graph(n=d, p=p)
         B_und_bin = _graph_to_adjmat(G_und)    # Undirected
         B_bin = _get_acyclic_graph(B_und_bin)

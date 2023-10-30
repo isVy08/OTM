@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from geomloss import SamplesLoss
 
-from utils import nanmean, MAE, RMSE
+from utils.missing import nanmean, MAE, RMSE
 
 import logging
 
@@ -116,8 +116,8 @@ class OTimputer():
             if verbose:
                 logging.info(f"Batchsize larger that half size = {len(X) // 2}. Setting batchsize to {self.batchsize}.")
 
-        mask = torch.isnan(X).double()
-        imps = (self.noise * torch.randn(mask.shape).double() + nanmean(X, 0))[mask.bool()]
+        mask = torch.isnan(X).float().to(X.device)
+        imps = (self.noise * torch.randn(mask.shape, device = X.device).float() + nanmean(X, 0))[mask.bool()]
         imps.requires_grad = True
 
         optimizer = self.opt([imps], lr=self.lr)
@@ -294,7 +294,7 @@ class RRimputer():
 
         X = X.clone()
         n, d = X.shape
-        mask = torch.isnan(X).double()
+        mask = torch.isnan(X).float().to(X.device)
         normalized_tol = self.tol * torch.max(torch.abs(X[~mask.bool()]))
 
         if self.batchsize > n // 2:
@@ -309,7 +309,7 @@ class RRimputer():
         optimizers = [self.opt(self.models[i].parameters(),
                                lr=self.lr, weight_decay=self.weight_decay) for i in range(d)]
 
-        imps = (self.noise * torch.randn(mask.shape).double() + nanmean(X, 0))[mask.bool()]
+        imps = (self.noise * torch.randn(mask.shape, device = X.device).float() + nanmean(X, 0))[mask.bool()]
         X[mask.bool()] = imps
         X_filled = X.clone()
 

@@ -29,4 +29,5 @@ def load_model(model, optimizer, scheduler, model_path, device):
         optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     if scheduler:
         scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
-    return checkpoint['prev_loss'], checkpoint['imputes'] 
+    if 'prev_loss' in checkpoint.keys():
+        return checkpoint['prev_loss']

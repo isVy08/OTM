@@ -100,7 +100,7 @@ def postprocess(B, graph_thres=0.3):
 
     return B, B_bin
 
-def to_dag(B, graph_thres = 0.01, iter = False):
+def to_dag(B, graph_thres):
 
     def prune(B, graph_thres):
         B = np.copy(B)
@@ -110,7 +110,7 @@ def to_dag(B, graph_thres = 0.01, iter = False):
 
         return B_bin
     
-    if iter:
+    if graph_thres is None:
         graph_thres = 0.01
         completed = False
         while not completed:
@@ -267,8 +267,9 @@ class MetricsDAG(object):
         gscore = MetricsDAG._cal_gscore(W_p, W_true)
         precision, recall, F1 = MetricsDAG._cal_precision_recall(W_p, W_true)
 
-        mt = {'fdr': fdr, 'tpr': tpr, 'fpr': fpr, 'shd': shd, 'nnz': pred_size,
-              'precision': precision, 'recall': recall, 'F1': F1, 'gscore': gscore}
+        mt = {
+            'fdr': fdr, 'tpr': tpr, 'fpr': fpr, 'nnz': pred_size,
+              'precision': precision, 'recall': recall, 'F1': F1, 'gscore': gscore, 'shd': shd}
         for i in mt:
             mt[i] = round(mt[i], decimal_num)
 
@@ -334,30 +335,37 @@ class MetricsDAG(object):
 
         return precision, recall, F1
 
-def evaluate(X, B_true, model, mask, threshold, return_imps = False, return_edges = False, 
-                    X_true = None, prune = True):
-    if return_imps:
-        X_filled = X.detach().clone()
-        X_filled[mask.bool()] = model.imputer.imps
-
-        print(X_true[mask.bool()][:15])
-        print(X_filled[mask.bool()][:15])
-
-    B_est = model._adj()
-    B_est = B_est.detach().cpu().numpy()
-    # print(B_est.max(), np.abs(B_est).min(), np.abs(B_est).mean())
-    print(B_est.round(2))
+def evaluate(B_true, B_est, threshold,return_edges = False, prune = True):
+    
+    
+    if isinstance(B_est, torch.Tensor):
+        B_est = B_est.detach().cpu().numpy()
     
     if prune:
         _, B_out = postprocess(B_est, graph_thres = threshold)
     else:
-        B_out = to_dag(B_est, threshold, False)
+        B_out = to_dag(B_est, threshold)
     
-    if return_edges:
-        print_edges(B_out, 15)
-        print_edges(B_true, 15)
+    if bool(return_edges):
+        print_edges(B_out, return_edges)
+        print_edges(B_true, return_edges)
+    
+    print(B_est.max(), B_est.min())
     
     print('Is DAG?', is_dag(B_out))
     raw_result = MetricsDAG(B_out, B_true)
     raw_result.display()
-    
+    return raw_result
+
+
+def write_result(result_dict, config_code, saved_path):
+    print('Writing results ...')
+    file = open(saved_path, 'a+')
+    file.write(f'{config_code}\n')
+
+    for k, v in result_dict.metrics.items():
+        file.write(f'{k} : {v}\n')
+
+
+    file.write('======================\n')
+    file.close()

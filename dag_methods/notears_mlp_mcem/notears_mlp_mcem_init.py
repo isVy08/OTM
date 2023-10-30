@@ -1,17 +1,27 @@
-import torch, math
+from .utils import LocallyConnected
+from .utils import LBFGSBScipy
+import torch
 import torch.nn as nn
 import numpy as np
-import sys
-from utils.eval import set_seed
-from dag_methods.notears_mlp_mcem.utils import LocallyConnected, LBFGSBScipy, trace_expm
 
+class Notears_MLP_MCEM_INIT:
+    def __init__(self, lambda1=0.01):
+        self.lambda1 = lambda1
 
-set_seed(123)
+    def fit(self, X=None, cov_emp=None):
+        assert (X is not None) ^ (cov_emp is not None), "Input only one of X and cov_emp"
+        assert X is not None, "Notears_NG supports only X as input, not cov_emp"
 
+        X = X.astype(np.float32)
+        d = X.shape[1]
+        model = MLPModel(dims=[d, 10, 1], bias=True)
+        W_est, model_final = notears_nonlinear(model, X, lambda1=0.01, lambda2=0.01)
 
-class NotearsMLP(nn.Module):
+        return W_est, model_final
+
+class MLPModel(nn.Module):
     def __init__(self, dims, bias=True):
-        super(NotearsMLP, self).__init__()
+        super(MLPModel, self).__init__()
         assert len(dims) >= 2
         assert dims[-1] == 1
         d = dims[0]
@@ -55,11 +65,11 @@ class NotearsMLP(nn.Module):
         fc1_weight = self.fc1_pos.weight - self.fc1_neg.weight  # [j * m1, i]
         fc1_weight = fc1_weight.view(d, -1, d)  # [j, m1, i]
         A = torch.sum(fc1_weight * fc1_weight, dim=1).t()  # [i, j]
-        h = trace_expm(A) - d  # (Zheng et al. 2018)
+        # h = trace_expm(A) - d  # (Zheng et al. 2018)
         # A different formulation, slightly faster at the cost of numerical stability
-        # M = torch.eye(d) + A / d  # (Yu et al. 2019)
-        # E = torch.matrix_power(M, d - 1)
-        # h = (E.t() * M).sum() - d
+        M = torch.eye(d) + A / d  # (Yu et al. 2019)
+        E = torch.matrix_power(M, d - 1)
+        h = (E.t() * M).sum() - d
         return h
 
     def l2_reg(self):
@@ -83,77 +93,6 @@ class NotearsMLP(nn.Module):
         fc1_weight = self.fc1_pos.weight - self.fc1_neg.weight  # [j * m1, i]
         fc1_weight = fc1_weight.view(d, -1, d)  # [j, m1, i]
         A = torch.sum(fc1_weight * fc1_weight, dim=1).t()  # [i, j]
-        W = torch.sqrt(A)  # [i, j]
-        W = W.cpu().detach().numpy()  # [i, j]
-        return W
-
-
-class NotearsSobolev(nn.Module):
-    def __init__(self, d, k):
-        """d: num variables k: num expansion of each variable"""
-        super(NotearsSobolev, self).__init__()
-        self.d, self.k = d, k
-        self.fc1_pos = nn.Linear(d * k, d, bias=False)  # ik -> j
-        self.fc1_neg = nn.Linear(d * k, d, bias=False)
-        self.fc1_pos.weight.bounds = self._bounds()
-        self.fc1_neg.weight.bounds = self._bounds()
-        nn.init.zeros_(self.fc1_pos.weight)
-        nn.init.zeros_(self.fc1_neg.weight)
-        self.l2_reg_store = None
-
-    def _bounds(self):
-        # weight shape [j, ik]
-        bounds = []
-        for j in range(self.d):
-            for i in range(self.d):
-                for _ in range(self.k):
-                    if i == j:
-                        bound = (0, 0)
-                    else:
-                        bound = (0, None)
-                    bounds.append(bound)
-        return bounds
-
-    def sobolev_basis(self, x):  # [n, d] -> [n, dk]
-        seq = []
-        for kk in range(self.k):
-            mu = 2.0 / (2 * kk + 1) / math.pi  # sobolev basis
-            psi = mu * torch.sin(x / mu)
-            seq.append(psi)  # [n, d] * k
-        bases = torch.stack(seq, dim=2)  # [n, d, k]
-        bases = bases.view(-1, self.d * self.k)  # [n, dk]
-        return bases
-
-    def forward(self, x):  # [n, d] -> [n, d]
-        bases = self.sobolev_basis(x)  # [n, dk]
-        x = self.fc1_pos(bases) - self.fc1_neg(bases)  # [n, d]
-        self.l2_reg_store = torch.sum(x ** 2) / x.shape[0]
-        return x
-
-    def h_func(self):
-        fc1_weight = self.fc1_pos.weight - self.fc1_neg.weight  # [j, ik]
-        fc1_weight = fc1_weight.view(self.d, self.d, self.k)  # [j, i, k]
-        A = torch.sum(fc1_weight * fc1_weight, dim=2).t()  # [i, j]
-        # h = trace_expm(A) - self.d  # (Zheng et al. 2018)
-        # A different formulation, slightly faster at the cost of numerical stability
-        M = torch.eye(self.d) + A / self.d  # (Yu et al. 2019)
-        E = torch.matrix_power(M, self.d - 1)
-        h = (E.t() * M).sum() - self.d
-        return h
-
-    def l2_reg(self):
-        reg = self.l2_reg_store
-        return reg
-
-    def fc1_l1_reg(self):
-        reg = torch.sum(self.fc1_pos.weight + self.fc1_neg.weight)
-        return reg
-
-    @torch.no_grad()
-    def fc1_to_adj(self) -> np.ndarray:
-        fc1_weight = self.fc1_pos.weight - self.fc1_neg.weight  # [j, ik]
-        fc1_weight = fc1_weight.view(self.d, self.d, self.k)  # [j, i, k]
-        A = torch.sum(fc1_weight * fc1_weight, dim=2).t()  # [i, j]
         W = torch.sqrt(A)  # [i, j]
         W = W.cpu().detach().numpy()  # [i, j]
         return W
@@ -192,7 +131,6 @@ def dual_ascent_step(model, X, lambda1, lambda2, rho, alpha, h, rho_max):
     alpha += rho * h_new
     return rho, alpha, h_new
 
-
 def notears_nonlinear(model: nn.Module,
                       X: np.ndarray,
                       lambda1: float = 0.,
@@ -202,45 +140,12 @@ def notears_nonlinear(model: nn.Module,
                       rho_max: float = 1e+16,
                       w_threshold: float = 0.3):
     rho, alpha, h = 1.0, 0.0, np.inf
-    for i in range(max_iter):
-        print(f'Iteration {i} ...')
+    for _ in range(max_iter):
         rho, alpha, h = dual_ascent_step(model, X, lambda1, lambda2,
                                          rho, alpha, h, rho_max)
         if h <= h_tol or rho >= rho_max:
             break
     W_est = model.fc1_to_adj()
-    W_est[np.abs(W_est) < w_threshold] = 0
-    return W_est
-
-
-if __name__ == '__main__':
-    
-    from config import get_config
-    from synthetic import SyntheticDataset
-    
-    config_id = int(sys.argv[1])
-    config = get_config(config_id)
-    
-    print('Loading data ...')
-    dataset = SyntheticDataset(n = config['num_obs'], d = config['num_vars'], 
-                            config_id = config_id,
-                            graph_type = config['graph_type'], 
-                            degree = config['degree'], 
-                            noise_type = config['noise_type'],
-                            miss_type = config['miss_type'], 
-                            miss_percent = config['miss_percent'], 
-                            sem_type = config['sem_type'],
-                            equal_variances = config['ev']
-                           )
-
-    X = dataset.X_true
-    n, d = X.shape
-    model = NotearsMLP(dims=[d, 10, 1], bias=True)
-    B_out = notears_nonlinear(model, X, lambda1=0.01, lambda2=0.01, max_iter=2)
-    np.save(f'output/{config_id}_notears.npy', B_out)
-
-    from utils.eval import MetricsDAG, is_dag
-    print('Is DAG?', is_dag(B_out))
-    raw_result = MetricsDAG(B_out, dataset.B_bin)
-    raw_result.display()
+    # W_est[np.abs(W_est) < w_threshold] = 0
+    return W_est, model
 

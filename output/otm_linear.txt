@@ -1,0 +1,199 @@
+Linear-ER1
+fdr : 0.0233
+tpr : 0.9545
+fpr : 0.0008
+nnz : 43
+precision : 0.9767
+recall : 0.9545
+F1 : 0.9655
+gscore : 0.9318
+shd : 2
+======================
+Linear-ER2
+fdr : 0.24
+tpr : 0.8636
+fpr : 0.0102
+nnz : 50
+precision : 0.76
+recall : 0.8636
+F1 : 0.8085
+gscore : 0.5909
+shd : 16
+======================
+Linear-ER3
+fdr : 0.5479
+tpr : 0.75
+fpr : 0.0339
+nnz : 73
+precision : 0.4521
+recall : 0.75
+F1 : 0.5641
+gscore : 0.0
+shd : 49
+======================
+Linear-ER4
+fdr : 0.0
+tpr : 0.9773
+fpr : 0.0
+nnz : 43
+precision : 1.0
+recall : 0.9773
+F1 : 0.9885
+gscore : 0.9773
+shd : 1
+======================
+Linear-ER5
+fdr : 0.1525
+tpr : 0.9259
+fpr : 0.0077
+nnz : 59
+precision : 0.8475
+recall : 0.9259
+F1 : 0.885
+gscore : 0.7593
+shd : 10
+======================
+Linear-ER6
+fdr : 0.4426
+tpr : 0.7083
+fpr : 0.0229
+nnz : 61
+precision : 0.5574
+recall : 0.7083
+F1 : 0.6239
+gscore : 0.1458
+shd : 33
+======================
+Linear-ER7
+fdr : 0.0426
+tpr : 0.9184
+fpr : 0.0017
+nnz : 47
+precision : 0.9574
+recall : 0.9184
+F1 : 0.9375
+gscore : 0.8776
+shd : 5
+======================
+Linear-ER8
+fdr : 0.1587
+tpr : 0.9464
+fpr : 0.0086
+nnz : 63
+precision : 0.8413
+recall : 0.9464
+F1 : 0.8908
+gscore : 0.7679
+shd : 12
+======================
+Linear-ER9
+fdr : 0.3276
+tpr : 0.75
+fpr : 0.0162
+nnz : 58
+precision : 0.6724
+recall : 0.75
+F1 : 0.7091
+gscore : 0.3846
+shd : 31
+======================
+
+Linear-SF1
+fdr : 0.0408
+tpr : 0.9592
+fpr : 0.0017
+nnz : 49
+precision : 0.9592
+recall : 0.9592
+F1 : 0.9592
+gscore : 0.9184
+shd : 2
+======================
+Linear-SF2
+fdr : 0.0816
+tpr : 0.9184
+fpr : 0.0034
+nnz : 49
+precision : 0.9184
+recall : 0.9184
+F1 : 0.9184
+gscore : 0.8367
+shd : 6
+======================
+Linear-SF3
+fdr : 0.44
+tpr : 0.5714
+fpr : 0.0187
+nnz : 50
+precision : 0.56
+recall : 0.5714
+F1 : 0.5657
+gscore : 0.1224
+shd : 41
+======================
+Linear-SF4
+fdr : 0.0
+tpr : 1.0
+fpr : 0.0
+nnz : 49
+precision : 1.0
+recall : 1.0
+F1 : 1.0
+gscore : 1.0
+shd : 0
+======================
+Linear-SF5
+fdr : 0.1607
+tpr : 0.9592
+fpr : 0.0077
+nnz : 56
+precision : 0.8393
+recall : 0.9592
+F1 : 0.8952
+gscore : 0.7755
+shd : 9
+======================
+Linear-SF6
+fdr : 0.3607
+tpr : 0.7959
+fpr : 0.0187
+nnz : 61
+precision : 0.6393
+recall : 0.7959
+F1 : 0.7091
+gscore : 0.3469
+shd : 27
+======================
+Linear-SF7
+fdr : 0.0962
+tpr : 0.9592
+fpr : 0.0043
+nnz : 52
+precision : 0.9038
+recall : 0.9592
+F1 : 0.9307
+gscore : 0.8571
+shd : 5
+======================
+Linear-SF8
+fdr : 0.098
+tpr : 0.9388
+fpr : 0.0043
+nnz : 51
+precision : 0.902
+recall : 0.9388
+F1 : 0.92
+gscore : 0.8367
+shd : 5
+======================
+Linear-SF9
+fdr : 0.1739
+tpr : 0.7755
+fpr : 0.0068
+nnz : 46
+precision : 0.8261
+recall : 0.7755
+F1 : 0.8
+gscore : 0.6122
+shd : 19
+======================
