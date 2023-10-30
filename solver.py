@@ -117,13 +117,13 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, beta = None):
         print(f'Iteration {i} ...')
         params_new, w_new, h_new = None, None, None
         while rho < rho_max:  
-            sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds)
+            sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds, options={'maxiter': 50})
             params_new = sol.x 
             w_new = params_new[:2*d*d]
             imps_new = params_new[2*d*d:]
             print(imps_new.max().round(5),
-                  imps_new.min().round(5),
-                  w_new.sum().round(5))
+                imps_new.min().round(5),
+                w_new.sum().round(5))
             h_new, _ = _h(_adj(w_new))
             
             if h_new > 0.25 * h:
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     
     lambda1 = 0.1
     n,d = dataset.X.shape
-    W_est, X_filled, mask = otm(dataset.X, lambda1, max_iter=30, h_tol=1e-8, rho_max=1e+10, beta = 0.5)
+    W_est, X_filled, mask = otm(dataset.X, lambda1, max_iter=30, h_tol=1e-8, rho_max=1e+10, beta = 0.1)
     
     raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3)
     
