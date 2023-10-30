@@ -1,15 +1,18 @@
 # OTM
 Causal Discovery with Missing Data
 
-To train our model on setting 1, 
+Linear model
 ```
-python main.py 1 train
+solver.py
 ```
 
-To evaluate our model on setting 1, 
+Non-linear model
 
 ```
-python main.py 1 eval
+nonlinear.py
+gp.py
+model_mcar.py
+model_mnar.py
 ```
 
 On the first run, a synthetic dataset following configurations in `config.py` will be created. The codes for generating synthetic data are copied from MissDAG. 
