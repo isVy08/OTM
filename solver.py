@@ -124,7 +124,7 @@ if __name__ == '__main__':
     lambda1 = 0.1
     n,d = dataset.X.shape
 
-    W_est, X_filled, mask = otm(dataset.X, lambda1, max_iter=30, h_tol=1e-8, rho_max=1e+16, beta = 0.1)
+    W_est, X_filled, mask = otm(dataset.X, lambda1, max_iter=30, h_tol=1e-8, rho_max=1e+16, beta = 0.01)
     
     raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3)
     

@@ -8,7 +8,7 @@ class Notears:
     def __init__(self, lambda_1_ev):
         self.lambda_1_ev = lambda_1_ev
 
-    def fit(self, X=None, cov_emp=None):
+    def fit(self, X=None, cov_emp=None, max_iter=100):
         """Solve min_W L(W; X) + lambda1 ‖W‖_1 s.t. h(W) = 0 using augmented Lagrangian.
 
         Args:
@@ -61,7 +61,7 @@ class Notears:
 
         # Default hyperparameters used by NOTEARS
         lambda1 = self.lambda_1_ev
-        max_iter, h_tol, rho_max = 100, 1e-8, 1e+16
+        h_tol, rho_max = 1e-8, 1e+16
 
         d = len(cov_emp)
         w_est, rho, alpha, h = np.zeros(2 * d * d), 1.0, 0.0, np.inf  # double w_est into (w_pos, w_neg)

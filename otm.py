@@ -31,7 +31,7 @@ hidden_dims = [D, D, D]
 
 
 batchsize = 300
-niter = 1000
+niter = 10000
 
 def loss_fn(x, y):
     return 0.5 / x.shape[0] * ((x - y) ** 2).sum() 
@@ -44,8 +44,8 @@ model = MissModel(X, mask, device, hidden_dims, config)
 
 model_path = f'models/{config["code"]}.pt'
 
-# optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-optimizer = torch.optim.LBFGS(model.parameters(), lr=1e-2, max_iter = 20)
+optimizer = torch.optim.Adam(model.parameters(), lr=1e-2)
+# optimizer = torch.optim.LBFGS(model.parameters(), lr=1e-2, max_iter = 20)
 
 
 if os.path.isfile(model_path):
@@ -87,13 +87,13 @@ if action == 'train':
                         f'Validation MAE: {mae:.4f}\t'
                         f'RMSE: {rmse:.4f}')
         
-        if loss < prev_loss:
-            print('Saving model ...')
-            torch.save({'model_state_dict': model.state_dict(), 
-                                'optimizer_state_dict': optimizer.state_dict(),
-                                'prev_loss': loss, 
-                                }, model_path)
-            prev_loss = loss
+        # if loss < prev_loss:
+        #     print('Saving model ...')
+        torch.save({'model_state_dict': model.state_dict(), 
+                            'optimizer_state_dict': optimizer.state_dict(),
+                            'prev_loss': loss, 
+                            }, model_path)
+        prev_loss = loss
 
 else:
     model.eval()
@@ -104,7 +104,7 @@ else:
     print(f'Validation MAE: {mae:.4f}\t'
         f'RMSE: {rmse:.4f}')
 
-    from utils.eval import evaluate_dag
+    from utils.eval import evaluate
     B_est = model.to_adj() 
     evaluate(dataset.B_bin, B_est, threshold = 0.3, prune = True)
     print('==============================')
