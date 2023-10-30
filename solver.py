@@ -5,6 +5,7 @@ import scipy.optimize as sopt
 from config import get_data
 from utils.eval import evaluate, write_result
 from tqdm import tqdm
+from ot_gradient import _auto_ot
 
 def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, beta = None):
     print('Optimizing for OT:', beta is not None)
@@ -35,44 +36,6 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, beta = None):
         """Convert doubled variables ([2 d^2] array) back to original variables ([d, d] matrix)."""
         return (w[:d * d] - w[d * d:]).reshape([d, d])
 
-    def _ot(X, W):
-        M = X @ W
-        # C = np.zeros((n, n)) # cost_matrix
-        # for i in range(n): 
-        #     for j in range(n):
-        #         C[i,j] = 0.5 * ((X[i:i+1, ] - M[j:j+1, ]) ** 2).sum() 
-        C = 0.5 * ot.dist(X,M, metric='sqeuclidean')
-        
-        unif = np.ones((n,))
-        P = ot.emd(unif, unif, C) # solve for optimal transport plan
-        loss = (C * P).mean() 
-        G_W = 0
-        I = np.eye(d,d)
-        G_X = []
-
-        for i in tqdm(range(n)): 
-            G_X_i = 0
-            # itself (X_i - X_iW)^2
-            # by row (X_i - X_jW)^2
-            grad_row = 0
-            # by column (X_j - X_iW)^2
-            grad_col = 0
-            grad_self =  1.0 * ((X[i:i+1, ] - M[i:i+1, ]) @ (I - W.T)) * P[i,i]
-            for j in range(n):
-                G_W += -1.0 * (X[j:j+1, ].T @ (X[i:i+1, ] - M[j:j+1, ])) * P[i,j] 
-                if i != j:
-                    grad_row +=  1.0 * ((X[i:i+1, ] - M[j:j+1, ]) @ I) * P[i,j]
-                    grad_col +=  1.0 * ((X[j:j+1, ] - M[i:i+1, ]) @ (-W.T)) * P[j,i]
-            G_X_i = grad_self + grad_row + grad_col
-            G_X.append(G_X_i)
-
-        G_W = G_W / (n * n)
-        G_X = np.concatenate(G_X, axis = 0) / (n*n)
-
-        
-        return loss, G_W, G_X
-
-
     def _func(params):
         
         """Evaluate value and gradient of augmented Lagrangian for doubled variables ([2 d^2] array)."""
@@ -96,7 +59,7 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, beta = None):
         G_smooth = G_W + (rho * h + alpha) * G_h
         # If using OT
         if beta is not None: 
-            ot_loss, G_W_ot, G_imps_ot = _ot(X, W)
+            ot_loss, G_W_ot, G_imps_ot = _auto_ot(X, W)
             obj += beta * ot_loss
             G_imps += (G_imps_ot * supp.mask)
             G_smooth += beta * G_W_ot
@@ -117,13 +80,14 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, beta = None):
         print(f'Iteration {i} ...')
         params_new, w_new, h_new = None, None, None
         while rho < rho_max:  
-            sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds, options={'maxiter': 50})
+            # sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds, options={'maxiter': 1000})
+            sol = sopt.minimize(_func, params, method='L-BFGS-B', jac=True, bounds=bnds)
             params_new = sol.x 
             w_new = params_new[:2*d*d]
             imps_new = params_new[2*d*d:]
             print(imps_new.max().round(5),
-                imps_new.min().round(5),
-                w_new.sum().round(5))
+                  imps_new.min().round(5),
+                  w_new.sum().round(5))
             h_new, _ = _h(_adj(w_new))
             
             if h_new > 0.25 * h:
@@ -159,7 +123,8 @@ if __name__ == '__main__':
     
     lambda1 = 0.1
     n,d = dataset.X.shape
-    W_est, X_filled, mask = otm(dataset.X, lambda1, max_iter=30, h_tol=1e-8, rho_max=1e+10, beta = 0.1)
+
+    W_est, X_filled, mask = otm(dataset.X, lambda1, max_iter=30, h_tol=1e-8, rho_max=1e+16, beta = 0.1)
     
     raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3)
     
