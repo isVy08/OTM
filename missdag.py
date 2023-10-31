@@ -36,11 +36,8 @@ end = time.time()
 
 
 from utils.eval import evaluate, write_result
-if config['sem_type'] != 'linear':
-    saved_path = 'output/missdag_linear.txt'
-else:
-    saved_path = 'output/missdag_nonlinear.txt'
-
+saved_path = f'output/missdag_{sem_type}.txt'
 
 raw_result = evaluate(dataset.B_bin, B_est, threshold = 0.3)
 write_result(raw_result, config['code'], saved_path)
+print(end-start)
