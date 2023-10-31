@@ -13,7 +13,6 @@ class SCM(nn.Module):
         self.I = torch.eye(self.D, device = device)
     
         self.weight = nn.Parameter(nn.init.xavier_normal_(torch.empty(D, D)))
-        self.bias = nn.Parameter(nn.init.xavier_normal_(torch.empty(1, D)))
         self.graph = SimpleDAG(self.D, device)
         
     
@@ -58,8 +57,7 @@ class SCM(nn.Module):
         '''
     
         w = self.to_adj()
-        # x = x - x.mean(0)
-        f = x @ w + self.bias
+        f = x @ w
         h_val = self.h_func()
         reg = self.l1_reg()
     

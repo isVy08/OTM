@@ -25,27 +25,26 @@ N, D = X.shape
 
 alpha = 0.1
 beta = 0.01
-gamma = 0.001
+gamma = 0.01
 
-hidden_dims = [D, D, D]
+hidden_dims = [D, D, D // 2]
 
 
-batchsize = 300
-niter = 10000
+batchsize = 500
+niter = 100000
 
-def loss_fn(x, y):
-    return 0.5 / x.shape[0] * ((x - y) ** 2).sum() 
+# def loss_fn(x, y):
+#     return 0.5 / x.shape[0] * ((x - y) ** 2).sum() 
 
 loss_fn = torch.nn.functional.mse_loss
 ground_cost = 'exact-ot'
-methods = ('got', )
+methods = None
 criterion = Criterion(alpha, beta, gamma, ground_cost, methods, loss_fn)
-model = MissModel(X, mask, device, hidden_dims, config)
+model = MissModel(X, mask, device, hidden_dims, config, criterion)
 
 model_path = f'models/{config["code"]}.pt'
 
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
-# optimizer = torch.optim.LBFGS(model.parameters(), lr=1e-2, max_iter = 20)
 
 
 if os.path.isfile(model_path):
@@ -71,7 +70,7 @@ if action == 'train':
     
     print('Training begins:')
     for i in range(niter):   
-        X_filled, loss = train_epoch(model, optimizer, loader, criterion)
+        X_filled, loss = train_epoch(model, optimizer, loader)
         
                 
         mae = MAE(X_filled, X_true, mask).item()
@@ -87,13 +86,13 @@ if action == 'train':
                         f'Validation MAE: {mae:.4f}\t'
                         f'RMSE: {rmse:.4f}')
         
-        # if loss < prev_loss:
-        #     print('Saving model ...')
-        torch.save({'model_state_dict': model.state_dict(), 
-                            'optimizer_state_dict': optimizer.state_dict(),
-                            'prev_loss': loss, 
-                            }, model_path)
-        prev_loss = loss
+        if loss < prev_loss:
+            print('Saving model ...')
+            torch.save({'model_state_dict': model.state_dict(), 
+                                'optimizer_state_dict': optimizer.state_dict(),
+                                'prev_loss': loss, 
+                                }, model_path)
+            prev_loss = loss
 
 else:
     model.eval()
