@@ -14,12 +14,7 @@ graph_type = sys.argv[2] # ER, SF
 sem_type = sys.argv[3]
 action = sys.argv[4]
 dataset, config = get_data(config_id, graph_type, sem_type)
-device = torch.device('mps')
-
-if sem_type == 'linear':
-    from model_mcar import MissModel
-else:
-    from model_mnar import MissModel
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 X = torch.from_numpy(dataset.X).to(torch.float32).to(device)
 X_true = torch.from_numpy(dataset.X_true).to(torch.float32).to(device)
@@ -29,14 +24,9 @@ N, D = X.shape
 
 
 alpha = 0.1
-beta = 0.01
 gamma = 0.001
-
-hidden_dims = [D, D, D // 2]
-
-
 batchsize = 500
-niter = 100000
+
 
 # def loss_fn(x, y):
 #     return 0.5 / x.shape[0] * ((x - y) ** 2).sum() 
@@ -44,11 +34,18 @@ niter = 100000
 loss_fn = torch.nn.functional.mse_loss
 ground_cost = 'exact-ot'
 methods = None
-criterion = Criterion(alpha, beta, gamma, ground_cost, methods, loss_fn)
-model = MissModel(X, mask, device, hidden_dims, config, criterion)
+criterion = Criterion(alpha, gamma, ground_cost, methods, loss_fn)
+
+
+
+from model import MissModel
+hidden_dims = [D, D, D]
+niter = 100
+imp_type = 'simple'
+
+model = MissModel(X, mask, device, hidden_dims, sem_type, imp_type, criterion)
 
 model_path = f'models/{config["code"]}.pt'
-
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
 
 
@@ -56,8 +53,6 @@ if os.path.isfile(model_path):
     print(f'Loading model from {model_path} ...')
     from utils.io import load_model
     prev_loss = load_model(model, optimizer, None, model_path, device)
-    
-
 else:
     prev_loss = 30
 

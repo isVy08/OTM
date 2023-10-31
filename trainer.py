@@ -3,9 +3,8 @@ import ot
 from geomloss import SamplesLoss
 
 class Criterion:
-    def __init__(self, alpha, beta, gamma, ground_cost, methods, loss_fn):
+    def __init__(self, alpha, gamma, ground_cost, methods, loss_fn):
         self.alpha = alpha 
-        self.beta = beta 
         self.gamma = gamma
         self.methods = methods
 
@@ -60,7 +59,7 @@ def train_epoch(model, optimizer, loader):
 
     model.eval()
     with torch.no_grad():
-        X_filled = model.impute(None)
+        X_filled = model.imputer(None)
             
 
     return X_filled, losses / len(loader)
