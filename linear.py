@@ -13,7 +13,7 @@ class SCM(nn.Module):
         self.I = torch.eye(self.D, device = device)
     
         self.weight = nn.Parameter(nn.init.xavier_normal_(torch.empty(D, D)))
-        self.graph = SimpleDAG(self.D, device)
+        self.graph = SimpleDAG(self.D, device, 1.2)
         
     
     def to_adj(self):
@@ -46,7 +46,7 @@ class SCM(nn.Module):
 
 
     def l1_reg(self):
-        W = self.weight * self.graph.get_prob_mask()
+        W = self.weight
         reg = torch.abs(W).sum()
         return reg
     
@@ -58,7 +58,7 @@ class SCM(nn.Module):
     
         w = self.to_adj()
         f = x @ w
-        h_val = self.h_func()
+        h_val = self.h_func('notears')
         reg = self.l1_reg()
     
 

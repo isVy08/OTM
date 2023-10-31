@@ -6,7 +6,7 @@ from utils.sampler import Sample_Bernoulli
 
 
 class SimpleDAG(nn.Module):
-    def __init__(self, D, device, tau = 0.2):
+    def __init__(self, D, device, tau = 1.2):
         super(SimpleDAG, self).__init__()
 
         
@@ -17,7 +17,7 @@ class SimpleDAG(nn.Module):
         self.U = torch.triu(ones, diagonal = 1)
         self.L = torch.tril(ones, diagonal = -1)                 
         
-        self.edge = nn.Parameter(nn.init.xavier_normal_(torch.empty(D, D)))
+        self.edge = nn.Parameter(nn.init.ones_(torch.empty(D, D)))
         self.sampler = Sample_Bernoulli(tau)
     
     def sample(self):

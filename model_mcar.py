@@ -1,43 +1,8 @@
 import ot
 import torch, math
 import torch.nn as nn
-import random
 from utils.missing import nanmean
-from geomloss import SamplesLoss
-from utils.arch import MLP, linear_sequential
-
-class Criterion:
-    def __init__(self, alpha, beta, gamma, ground_cost, methods, loss_fn):
-        self.alpha = alpha 
-        self.beta = beta 
-        self.gamma = gamma
-        self.methods = methods
-
-        self.loss_fn = loss_fn
-        self.ground_cost = ground_cost 
-
-        if ground_cost == 'sinkhorn':
-            self.ot_dist = SamplesLoss("sinkhorn", p=2, blur=0.01, scaling=.9, backend="tensorized")
-        else: 
-            self.ot_dist = self.exact_ot_cost
-
-            
-    def exact_ot_cost(self, x, y, cost_fn = 'mse'):
-        batchsize, _  = x.shape
-        unif = torch.ones((batchsize,), device = x.device) #  / batchsize
-        
-        if cost_fn != 'mse':
-            M = torch.zeros((batchsize, batchsize), device = x.device)
-            for i in range(batchsize): 
-                for j in range(batchsize):
-                    ml = cost_fn(x[i:i+1, ], y[j:j+1,])
-                    M[i,j] = ml 
-        else:
-            # M = ot.dist(x, y, metric='euclidean')
-            M = torch.cdist(x, y, p = 2)
-    
-        loss = ot.emd2(unif, unif, M)
-        return loss
+from utils.arch import MLP
 
     
 

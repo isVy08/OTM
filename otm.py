@@ -6,7 +6,8 @@ from utils.missing import MAE, RMSE
 from synthetic import SyntheticDataset
 from torch.utils.data import DataLoader
 from utils.eval import set_seed
-from model_mcar import MissModel, Criterion
+from trainer import Criterion
+
 
 config_id = int(sys.argv[1])
 graph_type = sys.argv[2] # ER, SF
@@ -15,6 +16,10 @@ action = sys.argv[4]
 dataset, config = get_data(config_id, graph_type, sem_type)
 device = torch.device('mps')
 
+if sem_type == 'linear':
+    from model_mcar import MissModel
+else:
+    from model_mnar import MissModel
 
 X = torch.from_numpy(dataset.X).to(torch.float32).to(device)
 X_true = torch.from_numpy(dataset.X_true).to(torch.float32).to(device)
@@ -25,7 +30,7 @@ N, D = X.shape
 
 alpha = 0.1
 beta = 0.01
-gamma = 0.01
+gamma = 0.001
 
 hidden_dims = [D, D, D // 2]
 
