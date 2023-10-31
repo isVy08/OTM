@@ -62,7 +62,9 @@ def get_data(config_id, graph_type, sem_type):
 
     return dataset, config
 
+if __name__ == '__main__':
 
-for config_id in range(1, 10):
-    for graph_type in ('ER', 'SF'):
-        get_data(config_id, graph_type, 'gp')
+    for config_id in range(1, 10):
+        for graph_type in ('ER', 'SF'):
+            for sem_type in ('linear', 'gp'):
+                get_data(config_id, graph_type, sem_type)

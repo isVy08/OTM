@@ -17,7 +17,8 @@ method = sys.argv[4]
 dataset, config = get_data(config_id, graph_type, sem_type)
 
 code = f"{config['code']}-{method}"
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('mps')
 
 
 X = torch.from_numpy(dataset.X).to(device)
