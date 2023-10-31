@@ -97,7 +97,8 @@ class SyntheticDataset:
             return np.tril(B_und, k=-1)
 
         def _graph_to_adjmat(G):
-            return nx.to_numpy_matrix(G)
+            # return nx.to_numpy_matrix(G)
+            return nx.to_numpy_array(G)
 
         p = float(degree) / (d - 1)
         # Probability for edge creation

@@ -2,7 +2,7 @@ import os
 import random
 
 import numpy as np
-import tensorflow as tf
+# import tensorflow as tf
 import torch
 import copy
 import pandas as pd
@@ -17,7 +17,7 @@ def set_seed(seed):
     """
     random.seed(seed)
     np.random.seed(seed)
-    tf.compat.v1.set_random_seed(seed)
+    # tf.compat.v1.set_random_seed(seed)
     torch.manual_seed(seed)
     try:
         os.environ['PYTHONHASHSEED'] = str(seed)

@@ -3,7 +3,7 @@ from utils.eval import set_seed
 
 set_seed(8)
 
-def get_linear_config(config_id, graph_type):
+def get_config(config_id, graph_type, sem_type):
     '''
     graph type: ER or SF
     '''
@@ -18,7 +18,7 @@ def get_linear_config(config_id, graph_type):
             'noise_type': 'gaussian',
             # 'miss_type': 'mcar',
             # 'miss_percent': 0.1,
-            "sem_type": 'linear',
+            "sem_type": sem_type,
             "ev": False
         }
 
@@ -36,14 +36,18 @@ def get_linear_config(config_id, graph_type):
     if config_id in (3,6,9):
         config['miss_percent'] = 0.5
     
-    config['code'] = f'Linear-{graph_type}{config_id}'
+    if sem_type == 'linear': 
+        sem_type = 'Linear'
+    else: 
+        sem_type = sem_type.upper()
+    
+    config['code'] = f'{sem_type}-{graph_type}{config_id}'
     
     return config
 
 
 def get_data(config_id, graph_type, sem_type):
-    if sem_type == 'linear':
-        config = get_linear_config(config_id, graph_type)
+    config = get_config(config_id, graph_type, sem_type)
     
     dataset = SyntheticDataset(n = config['num_obs'], d = config['num_vars'], 
                            config_code = config['code'],
@@ -59,208 +63,6 @@ def get_data(config_id, graph_type, sem_type):
     return dataset, config
 
 
-def get_config(config_id):
-    configs = {
-
-        1: {
-            'num_obs': 100,
-            'num_vars': 30,
-            'graph_type': 'ER',
-            'degree': 2, 
-            'noise_type': 'gaussian',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": True
-        }, 
-
-        9: {
-            'num_obs': 10000,
-            'num_vars': 100,
-            'graph_type': 'ER',
-            'degree': 2, 
-            'noise_type': 'gaussian',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": True
-        },
-
-        2: {
-            'num_obs': 100,
-            'num_vars': 30,
-            'graph_type': 'ER',
-            'degree': 2, 
-            'noise_type': 'gaussian',
-            'miss_type': 'mcar',
-            'miss_percent': 0.5,
-            "sem_type": 'linear',
-            "ev": True
-        }, 
-
-        3: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'ER',
-            'degree': 2, 
-            'noise_type': 'gaussian',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": True
-        }, 
-
-        4: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'ER',
-            'degree': 2, 
-            'noise_type': 'gaussian',
-            'miss_type': 'mnar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": True
-        }, 
-        ####################
-         5: {
-            'num_obs': 100,
-            'num_vars': 30,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'uniform',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": False
-        }, 
-
-
-        10: {
-            'num_obs': 10000,
-            'num_vars': 100,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'uniform',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": False
-        }, 
-
-        6: {
-            'num_obs': 100,
-            'num_vars': 30,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'uniform',
-            'miss_type': 'mcar',
-            'miss_percent': 0.5,
-            "sem_type": 'linear',
-            "ev": False
-        }, 
-
-        7: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'uniform',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": False
-        }, 
-
-        8: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'uniform',
-            'miss_type': 'mnar',
-            'miss_percent': 0.1,
-            "sem_type": 'linear',
-            "ev": False
-        }, 
-
-        ####################
-        11: {
-            'num_obs': 100,
-            'num_vars': 30,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'uniform',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'mlp',
-            "ev": False
-        }, 
-
-        12: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'ER',
-            'degree': 2, 
-            'noise_type': 'gaussian',
-            'miss_type': 'mcar',
-            'miss_percent': 0.5,
-            "sem_type": 'mlp',
-            "ev": True
-        }, 
-
-        13: {
-            'num_obs': 100,
-            'num_vars': 30,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'gumbel',
-            'miss_type': 'mcar',
-            'miss_percent': 0.1,
-            "sem_type": 'gp',
-            "ev": False
-        }, 
-
-        14: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'ER',
-            'degree': 2, 
-            'noise_type': 'laplace',
-            'miss_type': 'mcar',
-            'miss_percent': 0.5,
-            "sem_type": 'gp',
-            "ev": True
-        }, 
-
-         15: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'gaussian',
-            'miss_type': 'mnar',
-            'miss_percent': 0.5,
-            "sem_type": 'mlp',
-            "ev": True
-        }, 
-
-        16: {
-            'num_obs': 1000,
-            'num_vars': 50,
-            'graph_type': 'SF',
-            'degree': 2, 
-            'noise_type': 'laplace',
-            'miss_type': 'mnar',
-            'miss_percent': 0.5,
-            "sem_type": 'gp',
-            "ev": True
-        }, 
-
-        
-
-        
-        
-
-    }
-
-    return configs[config_id]
+for config_id in range(1, 10):
+    for graph_type in ('ER', 'SF'):
+        get_data(config_id, graph_type, 'gp')
