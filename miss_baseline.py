@@ -17,8 +17,7 @@ method = sys.argv[4]
 dataset, config = get_data(config_id, graph_type, sem_type)
 
 code = f"{config['code']}-{method}"
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-device = torch.device('mps')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 X = torch.from_numpy(dataset.X).to(device)
@@ -94,7 +93,7 @@ except TypeError:
 
 
 # =============== WRITE IMPUTATION ===============
-file = open('output/baseline_imputation.txt', 'a+')
+file = open(f'output/baseline_{sem_type}_imputation.txt', 'a+')
 file.write(f'{code}\n')
 file.write(f'MAE: {mae}, RMSE: {rmse}\n')
 file.write('======================\n')
@@ -124,10 +123,7 @@ else:
 
 # =============== WRITE GRAPH ===============
 
-if config['sem_type'] == 'linear':
-    saved_path = 'output/baseline_linear.txt'
-else:
-    saved_path = 'output/baseline_nonlinear.txt'
+saved_path = f'output/baseline_{sem_type}.txt'
 
 from utils.eval import evaluate, write_result
 raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3)

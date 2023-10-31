@@ -287,45 +287,4 @@ class DagmaNonlinear:
     
     
 if __name__ == '__main__':
-    import sys
-    from utils.eval import set_seed
-    set_seed(1)
-
-    from config import get_config
-    from synthetic import SyntheticDataset
-    
-    config_id = int(sys.argv[1])
-    device_id = int(sys.argv[2])
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu', device_id)
-
-    config = get_config(config_id)
-    
-    print('Loading data ...')
-    dataset = SyntheticDataset(n = config['num_obs'], d = config['num_vars'], 
-                            config_id = config_id,
-                            graph_type = config['graph_type'], 
-                            degree = config['degree'], 
-                            noise_type = config['noise_type'],
-                            miss_type = config['miss_type'], 
-                            miss_percent = config['miss_percent'], 
-                            sem_type = config['sem_type'],
-                            equal_variances = config['ev']
-                           )
-    
-    X = torch.from_numpy(dataset.X_true).to(device)
-    n, d = X.shape
-
-    eq_model = DagmaMLP(dims=[d, d, 1], device=device, bias=True)
-    eq_model.to(device)
-    model = DagmaNonlinear(eq_model)
-
-    B_out = model.fit(X, lambda1=0.02, lambda2=0.005)
-
-    np.save(f'output/{config_id}_dagma.npy', B_out)
-
-    from utils.eval import MetricsDAG, is_dag, postprocess
-    print('Is DAG?', is_dag(B_out))
-    _, B = postprocess(B_out, graph_thres = 0.3)
-    raw_result = MetricsDAG(B, dataset.B_bin)
-    raw_result.display()
-
+    pass
