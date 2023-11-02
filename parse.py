@@ -10,7 +10,6 @@ def extract_baseline(output, sem_type='linear'):
 
     graph = load_txt(f'output/baseline_{sem_type}.txt')
     
-
     for line in graph:
         if 'ER' in line or 'SF' in line: 
             code = line.split('-')[:2]
@@ -26,9 +25,12 @@ def extract_baseline(output, sem_type='linear'):
             m = line.split(' : ')[0]
             output[code][method][m] = v
 
-    imputation = load_txt('output/baseline_imputation.txt')
+    imputation = load_txt(f'output/baseline_{sem_type}_imputation.txt')
+   
+    sem_type = 'Linear' if sem_type == 'linear' else sem_type.upper()
+   
     for line in imputation:
-        if ('ER' in line or 'SF' in line) and sem_type.capitalize() in line: 
+        if ('ER' in line or 'SF' in line) and sem_type in line: 
             code = line.split('-')[:2]
             code = '-'.join(code)
             method = line.split('-')[2:]
@@ -41,8 +43,7 @@ def extract_baseline(output, sem_type='linear'):
     return output
 
 def extract_otm_missdag(output, method, sem_type):  
-    graph = load_txt(f'output/{method}_linear.txt')
-    # missdag = load_txt('output/missdag_linear.txt')
+    graph = load_txt(f'output/{method}_{sem_type}.txt')
 
     for line in graph:
         if 'ER' in line or 'SF' in line: 
@@ -73,14 +74,14 @@ def extract_otm_missdag(output, method, sem_type):
                 output[code][method]['RMSE'] = 'NA'
     return output
 
-output = extract_baseline({}, 'linear')
-output = extract_otm_missdag(output, 'otm', 'linear')
-output = extract_otm_missdag(output, 'missdag', 'linear')
+output = extract_baseline({}, 'gp')
+# output = extract_otm_missdag(output, 'otm', 'linear')
+# output = extract_otm_missdag(output, 'missdag', 'linear')
 # print(output)
 
 code = []
-otm = []
-missdag = []
+# otm = []
+# missdag = []
 mean = []
 sk = []
 linrr = []
@@ -91,8 +92,8 @@ for key, value in output.items():
     
     for m in ('F1', 'gscore', 'shd', 'MAE', 'RMSE'):
         code.append(key)
-        otm.append(value['otm'][m])
-        missdag.append(value['missdag'][m]) 
+        # otm.append(value['otm'][m])
+        # missdag.append(value['missdag'][m]) 
         mean.append(value['mean'][m]) 
         sk.append(value['sk'][m]) 
         linrr.append(value['lin-rr'][m]) 
@@ -102,8 +103,8 @@ for key, value in output.items():
 df = pd.DataFrame(data={
     'Metric': metrics,
     'Code' : code, 
-    'OTM': otm, 
-    'MissDAG': missdag, 
+    # 'OTM': otm, 
+    # 'MissDAG': missdag, 
     'Mean Imputer': mean, 
     'SK Imputer': sk,
     'RR Imputer': linrr, 

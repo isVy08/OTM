@@ -28,7 +28,7 @@ class MissModel(nn.Module):
         
         self.mu = MLP([self.D, self.D], nn.ReLU())
         self.var = MLP([self.D, self.D], nn.ReLU())
-        self.encoder = MLP(hidden_dims)
+        # self.encoder = MLP([self.D, self.D // 2])
 
         # imps = (torch.randn(mask.shape, device = mask.device).float() + nanmean(data, 0))[mask.bool()]
         # self.imps = nn.Parameter(imps)
@@ -60,14 +60,16 @@ class MissModel(nn.Module):
         # reconstruction from the imputations
         f, h_val, reg = self.scm(x) 
 
-        z = self.encoder(x)
-        g = self.encoder(f)
+        # z = self.encoder(x)
+        # g = self.encoder(f)
         
-        loss = self.criterion.loss_fn(f, x) + self.criterion.loss_fn(g, z)
+        loss = self.criterion.loss_fn(f, x)
+        # loss = loss + self.criterion.loss_fn(g, z)
+        loss = loss + 0.01 * self.criterion.ot_dist(f, x)
 
 
-        if self.criterion.beta is not None:
-            loss = loss + self.criterion.beta * h_val
+        if self.criterion.alpha is not None:
+            loss = loss + self.criterion.alpha * h_val
         
         if self.criterion.gamma is not None:
             loss = loss + self.criterion.gamma * reg
