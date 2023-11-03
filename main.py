@@ -12,18 +12,28 @@ dataset, config = get_data(config_id, graph_type, sem_type)
 code = config["code"]
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-data = torch.from_numpy(dataset.X).double().to(device)
-X_true = torch.from_numpy(dataset.X_true).double().to(device)
-mask = torch.isnan(data).to(torch.float32)
+data = torch.from_numpy(dataset.X).to(device)
+mask = torch.isnan(data)
+data = data.double()
+mask = mask.double()
+
+# data = mean_imputation(dataset.X)
+# data = torch.from_numpy(dataset.X).double().to(device)
+X_true = torch.from_numpy(dataset.X_true).to(device)
+
 N, D = data.shape
 
-from model import MissModel, DagmaNonlinear
+from model_v2 import MissModel, DagmaNonlinear
 hidden_dims = [D, D, 1]
-miss_model = MissModel(data, mask, hidden_dims, device)
+miss_model = MissModel(data, mask, hidden_dims, device, sem_type, initialized = None)
 miss_model.to(device)
 model = DagmaNonlinear(miss_model)
 
-W_est = model.fit(lambda1=0.02, lambda2=0.005)
+if sem_type == 'gp':
+    W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=3000, max_iter=3000)
+else:
+    W_est = model.fit(lambda1=0.02, lambda2=0.005)
+
 # W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=3, max_iter=3) # testing only
 
 # =============== WRITE GRAPH ===============
