@@ -32,7 +32,7 @@ model = DagmaNonlinear(miss_model)
 if sem_type == 'gp':
     W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=3000, max_iter=3000)
 else:
-    W_est = model.fit(lambda1=0.02, lambda2=0.005)
+    W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=5e3, max_iter=8e3)
 
 # W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=3, max_iter=3) # testing only
 
