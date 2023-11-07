@@ -1,10 +1,7 @@
 import torch, ot
 import torch.nn as nn
-import numpy as np
-from utils.arch import MLP
-from utils.missing import nanmean
 from tqdm import tqdm
-import typing, copy, random
+import random
 from model import SuperImputer
 from gp import SCM
 
@@ -81,8 +78,8 @@ class CustomNonlinear:
         y = X[:, s2].t()
 
 
-        fc1_weight = self.model.to_adj()
-        W = torch.square(fc1_weight)
+        W = self.model.scm.graph.get_prob_mask()
+      
         cost_fn = torch.nn.functional.mse_loss
 
         dim  = x.shape[0]
@@ -92,13 +89,11 @@ class CustomNonlinear:
         for i in range(dim): 
             for j in range(dim):
                 a, b = s1[i], s2[j]
-                weight = max(1 - W[a,b], 0)
-                ml = weight * cost_fn(x[i, :], y[i, :])
-                ml = W[a,b] * cost_fn(x[i, :], y[i, :])
+                ml = (1 - W[a,b]) * cost_fn(x[i, :], y[i, :])
                 M[i,j] = ml 
         
         loss = ot.emd2(unif, unif, M)
-        return loss 
+        return loss  
 
     def fit(self, lambda1,lambda2, max_iter, lr=1e-3):
         
