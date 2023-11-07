@@ -92,6 +92,7 @@ class DagmaNonlinear:
         dtype : torch.dtype, optional
             float number precision, by default ``torch.double``.
         """
+        self.vprint = print if verbose else lambda *a, **k: None
         self.data = model.imputer.data
         self.mask = model.imputer.mask
         self.model = model
@@ -103,37 +104,63 @@ class DagmaNonlinear:
         loss = 0.5 * d * torch.log(1 / n * torch.sum((output - target) ** 2))
         return loss
     
-    def exact_ot_cost(self, X, sample_size = 20):
+    def exact_ot_cost(self, X, sample_size = 10):
         '''
-        x, y are transposed.
+        Minimize cross-feature OT 
+        X : N x D
         '''
-
+        assert sample_size * 2 < self.model.d
         s1 = random.sample(range(self.model.d), k = sample_size)
         remain = [i for i in range(self.model.d) if i not in s1]
         s2 = random.sample(remain, k = sample_size)
 
-        x = X[:, s1].t()
-        y = X[:, s2].t()
-
-
+        # Extract weighted adjacency matrix
         fc1_weight = self.model.scm.fc1.weight
         fc1_weight = fc1_weight.view(self.model.d, -1, self.model.d)
         W = torch.sum(fc1_weight ** 2, dim=1).t()  # [i, j]
         cost_fn = torch.nn.functional.mse_loss
 
-        dim  = x.shape[0]
-        unif = torch.ones((dim,), device = x.device) / dim
+        dim  = sample_size
+        unif = torch.ones((dim,), device = X.device) / dim
         
-        M = torch.zeros((dim, dim), device = x.device)
+        C = torch.zeros((dim, dim), device = X.device) # must be nonnegative
         for i in range(dim): 
             for j in range(dim):
                 a, b = s1[i], s2[j]
-                weight = max(1 - W[a,b], 0)
-                ml = weight * cost_fn(x[i, :], y[i, :])
-                M[i,j] = ml 
+                weight = 1 - torch.sigmoid(W[a,b])
+                ml = weight * cost_fn(X[:, a], X[:, b])
+                C[i,j] = ml 
         
-        loss = ot.emd2(unif, unif, M)
-        return loss 
+        loss = ot.emd2(unif, unif, C)
+        return loss
+    
+    def rbf_kernel(self, X, Y):
+        batch_size, h_dim = X.shape
+    
+        norms_x = X.pow(2).sum(1, keepdim=True)  # batch_size x 1
+        prods_x = torch.mm(X, X.t())  # batch_size x batch_size
+        dists_x = norms_x + norms_x.t() - 2 * prods_x
+        
+        norms_y = Y.pow(2).sum(1, keepdim=True)  # batch_size x 1
+        prods_y = torch.mm(Y, Y.t())  # batch_size x batch_size
+        dists_y = norms_y + norms_y.t() - 2 * prods_y
+        
+        dot_prd = torch.mm(X, Y.t())
+        dists_c = norms_x + norms_y.t() - 2 * dot_prd
+        
+        stats = 0
+        for scale in [.1, .2, .5, 1., 2., 5., 10.]:
+            C = 2 * h_dim * 1.0 / scale
+            res1 = torch.exp(-C * dists_x) + torch.exp(-C * dists_y)
+
+            res1 = (1 - torch.eye(batch_size).to(X.device)) * res1
+            
+            res1 = res1.sum() / (batch_size - 1)
+            res2 = torch.exp(-C * dists_c)
+            res2 = res2.sum() * 2. / batch_size
+            stats += res1 - res2
+
+        return stats / batch_size
 
     def minimize(self, 
                  max_iter: float, 
@@ -170,8 +197,12 @@ class DagmaNonlinear:
             l1_reg = lambda1 * self.model.scm.fc1_l1_reg()
             obj = mu * (score + l1_reg) + h_val 
 
+            s1 = random.sample(range(X.shape[0]), k = 50)
+            remain = [i for i in range(X.shape[0]) if i not in s1]
+            s2 = random.sample(remain, k = 50)
+
             coefs = {'mlp': 0.01, 'gp': 0.01}
-            obj = obj + coefs[self.model.sem_type] * self.exact_ot_cost(X)
+            obj = obj + coefs[self.model.sem_type] * self.rbf_kernel(X[s1, :], X[s2, :])
    
             optimizer.zero_grad()
             # obj.backward()
