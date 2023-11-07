@@ -6,26 +6,24 @@ from simple_dag import SimpleDAG
 
 
 class SCM(nn.Module):
-    def __init__(self, D, device, hidden_dims):
+    def __init__(self, hidden_dims, device, bias):
         super(SCM, self).__init__()
 
-        self.D = D
+        self.d = hidden_dims[0]
     
-        self.weight = nn.Parameter(nn.init.xavier_normal_(torch.empty(D, D)))
-        self.bias = nn.Parameter(nn.init.xavier_normal_(torch.empty(1, D)))
-        self.graph = SimpleDAG(self.D, device)
-        
-        
-        self.I = torch.eye(self.D, device = device)
+        self.weight = nn.Parameter(nn.init.xavier_normal_(torch.empty(self.d, self.d)))
+        if bias:
+            self.bias = nn.Parameter(nn.init.xavier_normal_(torch.empty(1, self.d)))
+        else: 
+            self.bias = 0
+        self.graph = SimpleDAG(self.d, device)
+        self.I = torch.eye(self.d, device = device)
 
-        self.layer = linear_sequential(self.D, hidden_dims[:-1], hidden_dims[-1], nn.ReLU(), 1.0, 0.2)
-    
-    def split_weight(self, W):
-        pW = torch.max(W, torch.zeros_like(W))
-        nW = torch.max(-W, torch.zeros_like(W))
-        return pW, nW
+        layers = linear_sequential(self.d, hidden_dims[:-1], hidden_dims[-1], nn.ReLU(), 1.0, 0.0)
+        self.layer = nn.Sequential(*layers)
 
-    def to_adj(self):
+    def fc1_to_adj(self):
+        
 
         if self.training:
             A = self.graph.sample()
@@ -36,23 +34,23 @@ class SCM(nn.Module):
         return W
         
 
-    def h_func(self, method = 'gnn'):
+    def h_func(self, method = 'dag-gnn'):
         
-        A = self.to_adj()
+        A = self.fc1_to_adj()
         A = torch.square(A)
         if method == 'dagma':
             s = 1.0
-            h = -torch.slogdet(s * self.I - A)[1] + self.D * np.log(s)
+            h = -torch.slogdet(s * self.I - A)[1] + self.d * np.log(s)
         elif method == 'notears':
-            h = torch.trace(torch.matrix_exp(A)) - self.D
+            h = torch.trace(torch.matrix_exp(A)) - self.d
         else:
-            M = self.I + A / self.D  # (Yu et al. 2019)
-            E = torch.matrix_power(M, self.D - 1)
-            h = (E.t() * M).sum() - self.D
+            M = self.I + A / self.d  # (Yu et al. 2019)
+            E = torch.matrix_power(M, self.d - 1)
+            h = (E.t() * M).sum() - self.d
 
         return h
 
-    def l1_reg(self):
+    def fc1_l1_reg(self):
         W = self.weight * self.graph.get_prob_mask()
         reg = torch.abs(W).sum()
         return reg
@@ -72,15 +70,11 @@ class SCM(nn.Module):
         '''
         x : torch.Tensor shape (B,D)
         '''
-        w = self.to_adj()
+        w = self.fc1_to_adj()
         x = x @ w + self.bias
-        e = self.__expand__(x)
+        e = self.__expand__(x)        
         f = self.layer(e).sum(dim = 2)
-
-        h_val = self.h_func()
-        reg = self.l1_reg()
-        return f, h_val, reg
+        return f
 
 
     
-

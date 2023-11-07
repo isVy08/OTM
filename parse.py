@@ -20,7 +20,7 @@ def extract_baseline(output, sem_type='linear'):
             method = '-'.join(method)
             if method not in output[code]:
                 output[code][method] = {}
-        elif 'F1' in line or 'gscore' in line or 'shd' in line:
+        elif 'F1' in line or 'tpr' in line or 'shd' in line:
             v = line.split(' : ')[-1]
             m = line.split(' : ')[0]
             output[code][method][m] = v
@@ -49,7 +49,7 @@ def extract_otm_missdag(output, method, sem_type):
     for line in graph:
         if 'ER' in line or 'SF' in line: 
             code = line
-        elif 'F1' in line or 'gscore' in line or 'shd' in line:
+        elif 'F1' in line or 'tpr' in line or 'shd' in line:
             value = line.split(' : ')[-1]
             m = line.split(' : ')[0]
             if method not in output[code]:
@@ -79,12 +79,12 @@ def extract_otm_missdag(output, method, sem_type):
 sem_type = 'gp'
 output = extract_baseline({}, sem_type)
 output = extract_otm_missdag(output, 'otm', sem_type)
-# output = extract_otm_missdag(output, 'missdag', sem_type)
+output = extract_otm_missdag(output, 'missdag', sem_type)
 # print(output)
 
 code = []
 otm = []
-# missdag = []
+missdag = []
 mean = []
 sk = []
 linrr = []
@@ -94,10 +94,10 @@ metrics = []
 output = dict(sorted(output.items()))
 for key, value in output.items():
     
-    for m in ('F1', 'gscore', 'shd', 'MAE', 'RMSE'):
+    for m in ('F1', 'tpr', 'shd', 'MAE', 'RMSE'):
         code.append(key)
         otm.append(value['otm'][m])
-        # missdag.append(value['missdag'][m]) 
+        missdag.append(value['missdag'][m]) 
         mean.append(value['mean'][m]) 
         sk.append(value['sk'][m]) 
         linrr.append(value['lin-rr'][m]) 
@@ -108,7 +108,7 @@ df = pd.DataFrame(data={
     'Metric': metrics,
     'Code' : code, 
     'OTM': otm, 
-    # 'MissDAG': missdag, 
+    'MissDAG': missdag, 
     'Mean Imputer': mean, 
     'SK Imputer': sk,
     'RR Imputer': linrr, 

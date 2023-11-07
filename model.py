@@ -5,7 +5,7 @@ from utils.arch import MLP
 from utils.missing import nanmean
 from dagma import DagmaMLP, DagmaLinear
 from tqdm.auto import tqdm
-import typing, copy
+import typing, copy, random
 
 class SuperImputer(nn.Module): 
     def __init__(self, data, mask, hidden_dims, initialized = None):
@@ -20,7 +20,7 @@ class SuperImputer(nn.Module):
         self.initialized = initialized
 
         if initialized == 'learnable':
-            imps = (torch.randn(data.shape, device = mask.device).float() + nanmean(data, 0))[mask.bool()]
+            imps = (torch.randn(data.shape, device = mask.device) + nanmean(data, 0))[mask.bool()]
             self.imps = nn.Parameter(imps)
     
     def forward(self): 
@@ -33,7 +33,7 @@ class SuperImputer(nn.Module):
         
         logvar = self.var(x)
         imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
-        x = imps * self.mask + x * (1 - self.mask)
+        x = imps * self.mask + x
         return x 
         
 class SimpleImputer(nn.Module): 
@@ -56,22 +56,11 @@ class MissModel(nn.Module):
     def __init__(self, data, mask, hidden_dims, device, sem_type, initialized = None):
         super(MissModel, self).__init__()
 
-        self.D = hidden_dims[0]
+        self.d = hidden_dims[0]
         self.sem_type = sem_type
         
-        
-        
-        if sem_type == 'mlp':
-            self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
-            self.imputer = SuperImputer(data, mask, [self.D, self.D], initialized)
-        elif sem_type == 'gp':
-            self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
-            self.imputer = SuperImputer(data, mask, [self.D, 10, self.D], initialized)
-            # self.imputer = SimpleImputer(data, mask)
-        else:
-            self.scm = DagmaLinear(hidden_dims, device=device, bias=False)
-            self.imputer = SuperImputer(data, mask, [self.D, self.D], initialized)
-            # self.imputer = SimpleImputer(data, mask)
+        self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
+        self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
         
         
     def to_adj(self):
@@ -103,7 +92,8 @@ class DagmaNonlinear:
         dtype : torch.dtype, optional
             float number precision, by default ``torch.double``.
         """
-        self.vprint = print if verbose else lambda *a, **k: None
+        self.data = model.imputer.data
+        self.mask = model.imputer.mask
         self.model = model
         self.dtype = dtype
     
@@ -113,49 +103,37 @@ class DagmaNonlinear:
         loss = 0.5 * d * torch.log(1 / n * torch.sum((output - target) ** 2))
         return loss
     
-    def exact_ot_cost(self, x, y, cost_fn = 'euclidean'):
-        batchsize, _  = x.shape
-        unif = torch.ones((batchsize,), device = x.device) / batchsize
-        if cost_fn != 'euclidean':
-            M = torch.zeros((batchsize, batchsize), device = x.device)
-            for i in range(batchsize): 
-                for j in range(batchsize):
-                    ml = cost_fn(x[i:i+1, ], y[j:j+1, ])
-                    M[i,j] = ml 
-        else:
-            # M = torch.cdist(x, y, p=2)
-            M = ot.dist(x, y, metric='euclidean')
+    def exact_ot_cost(self, X, sample_size = 20):
+        '''
+        x, y are transposed.
+        '''
+
+        s1 = random.sample(range(self.model.d), k = sample_size)
+        remain = [i for i in range(self.model.d) if i not in s1]
+        s2 = random.sample(remain, k = sample_size)
+
+        x = X[:, s1].t()
+        y = X[:, s2].t()
+
+
+        fc1_weight = self.model.scm.fc1.weight
+        fc1_weight = fc1_weight.view(self.model.d, -1, self.model.d)
+        W = torch.sum(fc1_weight ** 2, dim=1).t()  # [i, j]
+        cost_fn = torch.nn.functional.mse_loss
+
+        dim  = x.shape[0]
+        unif = torch.ones((dim,), device = x.device) / dim
+        
+        M = torch.zeros((dim, dim), device = x.device)
+        for i in range(dim): 
+            for j in range(dim):
+                a, b = s1[i], s2[j]
+                weight = max(1 - W[a,b], 0)
+                ml = weight * cost_fn(x[i, :], y[i, :])
+                M[i,j] = ml 
         
         loss = ot.emd2(unif, unif, M)
         return loss 
-    
-    def rbf_kernel(self, X, Y):
-        batch_size, h_dim = X.shape
-    
-        norms_x = X.pow(2).sum(1, keepdim=True)  # batch_size x 1
-        prods_x = torch.mm(X, X.t())  # batch_size x batch_size
-        dists_x = norms_x + norms_x.t() - 2 * prods_x
-        
-        norms_y = Y.pow(2).sum(1, keepdim=True)  # batch_size x 1
-        prods_y = torch.mm(Y, Y.t())  # batch_size x batch_size
-        dists_y = norms_y + norms_y.t() - 2 * prods_y
-        
-        dot_prd = torch.mm(X, Y.t())
-        dists_c = norms_x + norms_y.t() - 2 * dot_prd
-        
-        stats = 0
-        for scale in [.1, .2, .5, 1., 2., 5., 10.]:
-            C = 2 * h_dim * 1.0 / scale
-            res1 = torch.exp(-C * dists_x) + torch.exp(-C * dists_y)
-
-            res1 = (1 - torch.eye(batch_size).to(X.device)) * res1
-            
-            res1 = res1.sum() / (batch_size - 1)
-            res2 = torch.exp(-C * dists_c)
-            res2 = res2.sum() * 2. / batch_size
-            stats += res1 - res2
-
-        return stats / batch_size
 
     def minimize(self, 
                  max_iter: float, 
@@ -192,11 +170,9 @@ class DagmaNonlinear:
             l1_reg = lambda1 * self.model.scm.fc1_l1_reg()
             obj = mu * (score + l1_reg) + h_val 
 
-            if self.model.sem_type == 'linear':
-                obj = obj + 0.001 * self.rbf_kernel(Xhat, X)
-            else:
-                obj = obj + 0.01 * self.rbf_kernel(Xhat, X)
-            
+            coefs = {'mlp': 0.01, 'gp': 0.01}
+            obj = obj + coefs[self.model.sem_type] * self.exact_ot_cost(X)
+   
             optimizer.zero_grad()
             # obj.backward()
             obj.backward(retain_graph=True)
@@ -216,9 +192,7 @@ class DagmaNonlinear:
             pbar.update(1)
         return True
 
-    def fit(self, 
-            # X: typing.Union[torch.Tensor, np.ndarray],
-            # M: typing.Union[torch.Tensor, np.ndarray],
+    def fit(self,
             lambda1: float = .02, 
             lambda2: float = .005,
             T: int = 4, 
@@ -230,22 +204,7 @@ class DagmaNonlinear:
             lr: float = .0002, 
             w_threshold: float = 0.3, 
             checkpoint: int = 1000,
-        ) -> np.ndarray:
-       
-        # torch.set_default_dtype(self.dtype)
-        # if type(X) == torch.Tensor:
-        #     self.data = X.type(self.dtype)
-        #     self.mask = M.type(self.dtype)
-        # elif type(X) == np.ndarray:
-        #     self.data = torch.from_numpy(X).type(self.dtype)
-        #     self.mask = torch.from_numpy(M).type(self.dtype)
-        # else:
-        #     ValueError("X should be numpy array or torch Tensor.")
-
-        self.data = self.model.imputer.data
-        self.mask = self.model.imputer.mask
-        
-        
+        ) -> np.ndarray:        
         
         self.checkpoint = checkpoint
         mu = mu_init
