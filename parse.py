@@ -28,6 +28,7 @@ def extract_baseline(output, sem_type='linear'):
     imputation = load_txt(f'output/baseline_{sem_type}_imputation.txt')
    
     sem_type = 'Linear' if sem_type == 'linear' else sem_type.upper()
+    if sem_type == 'GP-ADD': sem_type = 'GPADD'
    
     for line in imputation:
         if ('ER' in line or 'SF' in line) and sem_type in line: 
@@ -59,6 +60,7 @@ def extract_otm_missdag(output, method, sem_type):
     if method == 'otm':
         imputation = load_txt(f'output/otm_{sem_type}_imputation.txt')
         sem_type = 'Linear' if sem_type == 'linear' else sem_type.upper()
+        if sem_type == 'GP-ADD': sem_type = 'GPADD'
         for line in imputation:
             if ('ER' in line or 'SF' in line) and sem_type in line: 
                 code = line
@@ -76,7 +78,7 @@ def extract_otm_missdag(output, method, sem_type):
                 output[code][method]['RMSE'] = 'NA'
     return output
 
-sem_type = 'mim'
+sem_type = 'gp-add'
 output = extract_baseline({}, sem_type)
 output = extract_otm_missdag(output, 'otm', sem_type)
 # output = extract_otm_missdag(output, 'missdag', sem_type)
