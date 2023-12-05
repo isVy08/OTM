@@ -50,8 +50,9 @@ def get_config(config_id, graph_type, sem_type):
 def get_data(config_id, graph_type, sem_type):
     config = get_config(config_id, graph_type, sem_type)
     
-    if sem_type == 'REAL': 
+    if sem_type == 'real': 
         dataset = RealDataset(n = config['num_obs'], d = config['num_vars'], 
+                                config_code = config['code'],
                                 miss_type = config['miss_type'], 
                                 miss_percent = config['miss_percent'])
     else:
