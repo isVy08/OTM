@@ -12,6 +12,8 @@ def extract_baseline(output, sem_type='linear'):
     
     for line in graph:
         if 'ER' in line or 'SF' in line: 
+            if 'GP-ADD' in line: 
+                line = line.replace('GP-ADD', 'GPADD')
             code = line.split('-')[:2]
             code = '-'.join(code)
             if code not in output:
@@ -28,10 +30,11 @@ def extract_baseline(output, sem_type='linear'):
     imputation = load_txt(f'output/baseline_{sem_type}_imputation.txt')
    
     sem_type = 'Linear' if sem_type == 'linear' else sem_type.upper()
-    if sem_type == 'GP-ADD': sem_type = 'GPADD'
    
     for line in imputation:
         if ('ER' in line or 'SF' in line) and sem_type in line: 
+            if 'GP-ADD' in line: 
+                line = line.replace('GP-ADD', 'GPADD')
             code = line.split('-')[:2]
             code = '-'.join(code)
             method = line.split('-')[2:]
@@ -49,6 +52,8 @@ def extract_otm_missdag(output, method, sem_type):
 
     for line in graph:
         if 'ER' in line or 'SF' in line: 
+            if 'GP-ADD' in line: 
+                line = line.replace('GP-ADD', 'GPADD')
             code = line
         elif 'F1' in line or 'tpr' in line or 'shd' in line:
             value = line.split(' : ')[-1]
@@ -60,9 +65,10 @@ def extract_otm_missdag(output, method, sem_type):
     if method == 'otm':
         imputation = load_txt(f'output/otm_{sem_type}_imputation.txt')
         sem_type = 'Linear' if sem_type == 'linear' else sem_type.upper()
-        if sem_type == 'GP-ADD': sem_type = 'GPADD'
         for line in imputation:
             if ('ER' in line or 'SF' in line) and sem_type in line: 
+                if 'GP-ADD' in line: 
+                    line = line.replace('GP-ADD', 'GPADD')
                 code = line
             elif 'MAE' in line: 
                 mae = line.split(', ')[0].split(': ')[-1]
@@ -72,16 +78,18 @@ def extract_otm_missdag(output, method, sem_type):
     else:
         for line in graph:
             if 'ER' in line or 'SF' in line: 
+                if 'GP-ADD' in line: 
+                    line = line.replace('GP-ADD', 'GPADD')
                 code = line
             else:
                 output[code][method]['MAE'] = 'NA'
                 output[code][method]['RMSE'] = 'NA'
     return output
 
-sem_type = 'gp-add'
+sem_type = 'mim'
 output = extract_baseline({}, sem_type)
 output = extract_otm_missdag(output, 'otm', sem_type)
-# output = extract_otm_missdag(output, 'missdag', sem_type)
+output = extract_otm_missdag(output, 'missdag', sem_type)
 # print(output)
 
 code = []
@@ -99,7 +107,7 @@ for key, value in output.items():
     for m in ('F1', 'tpr', 'shd', 'MAE', 'RMSE'):
         code.append(key)
         otm.append(value['otm'][m])
-        # missdag.append(value['missdag'][m]) 
+        missdag.append(value['missdag'][m]) 
         mean.append(value['mean'][m]) 
         sk.append(value['sk'][m]) 
         linrr.append(value['lin-rr'][m]) 
@@ -110,7 +118,7 @@ df = pd.DataFrame(data={
     'Metric': metrics,
     'Code' : code, 
     'OTM': otm, 
-    # 'MissDAG': missdag, 
+    'MissDAG': missdag, 
     'Mean Imputer': mean, 
     'SK Imputer': sk,
     'RR Imputer': linrr, 

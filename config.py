@@ -1,4 +1,5 @@
 from synthetic import SyntheticDataset
+from real import RealDataset
 from utils.eval import set_seed
 
 set_seed(8)
@@ -9,7 +10,7 @@ def get_config(config_id, graph_type, sem_type):
     '''
 
     assert config_id < 10, 'Input config id from 1 to 9'
-    assert graph_type in ('ER', 'SF'), 'ER or SF graph only'
+    assert graph_type in ('ER', 'SF', 'REAL'), 'ER or SF graph only'
     config = {
             'num_obs': 1000,
             'num_vars': 50,
@@ -49,22 +50,30 @@ def get_config(config_id, graph_type, sem_type):
 def get_data(config_id, graph_type, sem_type):
     config = get_config(config_id, graph_type, sem_type)
     
-    dataset = SyntheticDataset(n = config['num_obs'], d = config['num_vars'], 
-                           config_code = config['code'],
-                           graph_type = config['graph_type'], 
-                           degree = config['degree'], 
-                           noise_type = config['noise_type'],
-                           miss_type = config['miss_type'], 
-                           miss_percent = config['miss_percent'], 
-                           sem_type = config['sem_type'],
-                           equal_variances = config['ev']
-                           )
+    if sem_type == 'real': 
+        dataset = RealDataset(n = config['num_obs'], d = config['num_vars'], 
+                                miss_type = config['miss_type'], 
+                                miss_percent = config['miss_percent'])
+    else:
+
+        dataset = SyntheticDataset(n = config['num_obs'], d = config['num_vars'], 
+                            config_code = config['code'],
+                            graph_type = config['graph_type'], 
+                            degree = config['degree'], 
+                            noise_type = config['noise_type'],
+                            miss_type = config['miss_type'], 
+                            miss_percent = config['miss_percent'], 
+                            sem_type = config['sem_type'],
+                            equal_variances = config['ev']
+                            )
 
     return dataset, config
 
 if __name__ == '__main__':
 
-    for config_id in range(1, 10):
-        for graph_type in ('ER', 'SF'):
-            for sem_type in ('linear', 'gp'):
+    for config_id in range(1, 4):
+        for graph_type in ('REAL', ):
+            for sem_type in ('real',):
                 get_data(config_id, graph_type, sem_type)
+
+    
