@@ -22,20 +22,14 @@ N, D = data.shape
 hidden_dims = [D, D, 1]
 
 
-if sem_type == 'gp':
-    from custom_model import MissModel, CustomNonlinear
-    miss_model = MissModel(data, mask, hidden_dims, device, sem_type, initialized = None)
-    miss_model.to(device)
-    model = CustomNonlinear(miss_model)
-    W_est = model.fit(lambda1=0.02, lambda2=0.01, max_iter=10000, lr=1e-3)
-else:
-    from model import MissModel, DagmaNonlinear
-    data = data.double()
-    mask = mask.double()
-    miss_model = MissModel(data, mask, hidden_dims, device, sem_type, initialized = None)
-    miss_model.to(device)
-    model = DagmaNonlinear(miss_model)
-    W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=5e4, max_iter=8e4)
+
+from model import MissModel, DagmaNonlinear
+data = data.double()
+mask = mask.double()
+miss_model = MissModel(data, mask, hidden_dims, device, sem_type, initialized = None)
+miss_model.to(device)
+model = DagmaNonlinear(miss_model)
+W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=5e4, max_iter=8e4)
 
 
 # =============== WRITE GRAPH ===============
