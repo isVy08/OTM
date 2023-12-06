@@ -39,15 +39,17 @@ class RealDataset:
             default missingness mechanism is Missing Cmpletely A Rndom (MCAR)
             mode: can be 'mcar', 'mar', or 'mnar'
             mcar_p: probability of having a missing value that is MCAR
-            mar_p: probability of having a missing given different parent values. The first is the probability of having a missing value when its parent value is lower than threshold; The second is the probability of having a missing value when its parent value is higher than threshold.
+            mar_p: probability of having a missing given different parent values. 
+            The first is the probability of having a missing value when its parent value is lower than threshold; 
+            The second is the probability of having a missing value when its parent value is higher than threshold.
             mnar_p: the same with mar_p
             '''        
             if miss_type == 'mcar':
                 df_miss = spl.add_missing_data(df_sim, mode='mcar', seed=10, mcar_p=miss_percent)
             elif miss_type == 'mar':
-                df_miss = spl.add_missing_data(df_sim, mode='mar', seed=10, mar_p=miss_percent)
+                df_miss = spl.add_missing_data(df_sim, mode='mar', seed=10, mar_p=[1-miss_percent, miss_percent])
             elif miss_type == 'mnar':
-                df_miss = spl.add_missing_data(df_sim, mode='mnar', seed=10, mnar_p=miss_percent)
+                df_miss = spl.add_missing_data(df_sim, mode='mnar', seed=10, mar_p=[1-miss_percent, miss_percent])
             else:
                 raise ValueError('Unknown missing type!')
             self.X = df_miss.to_numpy()
