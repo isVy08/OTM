@@ -31,7 +31,7 @@ def nam2num(df_in):
     return df
 
 
-def missing_mask(df, mode, prob_posi, prob_nega):
+def missing_mask(df_in, mode, prob_posi, prob_nega):
     df = df_in.copy(deep=True)
 
     nrow, ncol = df.shape
