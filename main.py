@@ -29,7 +29,7 @@ mask = mask.double()
 miss_model = MissModel(data, mask, hidden_dims, device, sem_type, initialized = None)
 miss_model.to(device)
 model = DagmaNonlinear(miss_model)
-W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=5e4, max_iter=8e4)
+W_est = model.fit(lambda1=0.02, lambda2=0.005, warm_iter=5e3, max_iter=8e3)
 
 
 # =============== WRITE GRAPH ===============
