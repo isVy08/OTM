@@ -8,8 +8,6 @@ def get_config(config_id, graph_type, sem_type):
     '''
     graph type: ER or SF
     '''
-
-    assert config_id < 20, 'Input config id from 1 to 19'
     assert graph_type in ('ER', 'SF', 'REAL'), 'ER or SF graph only'
     config = {
             'num_obs': 1000,
@@ -23,25 +21,23 @@ def get_config(config_id, graph_type, sem_type):
             "ev": False
         }
 
-    if config_id > 10:
-        assert sem_type == 'real' and graph_type == 'REAL', 'this config applies to real data only!'
-        config['num_vars'] = 222
-        config['num_obs'] = 5000
-
-    if config_id in (1,2,3, 11,12,13):
+    if config_id in (1,2,3):
         config['miss_type'] = 'mcar'
-    elif config_id in (4,5,6, 14,15,16):
+    elif config_id in (4,5,6):
         config['miss_type'] = 'mar'
-    elif config_id in (7,8,9, 17,18,19):
+    elif config_id in (7,8,9):
         config['miss_type'] = 'mnar'
     
-    if config_id in (1,4,7, 11,14,17):
+    if config_id in (1,4,7):
         config['miss_percent'] = 0.1
-    elif config_id in (2,5,8, 12,15,18):
+    elif config_id in (2,5,8):
         config['miss_percent'] = 0.3
-    if config_id in (3,6,9, 13,16,19):
+    if config_id in (3,6,9):
         config['miss_percent'] = 0.5
 
+    
+
+    
     if sem_type == 'linear': 
         sem_type = 'Linear'
     else: 
@@ -74,12 +70,3 @@ def get_data(config_id, graph_type, sem_type):
                             )
 
     return dataset, config
-
-if __name__ == '__main__':
-
-    for config_id in range(1, 4):
-        for graph_type in ('REAL', ):
-            for sem_type in ('real',):
-                get_data(config_id, graph_type, sem_type)
-
-    

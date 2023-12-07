@@ -1,9 +1,10 @@
 import npds.CauAcc as acc
 import numpy as np
-import os
+import os, random
 import npds.sampling as spl
 from utils.io import load_pickle, write_pickle
 
+seed = random.choice(range(10))
 class RealDataset:
     def __init__(self,n, d, config_code, miss_type, miss_percent):
         self.n = n 
@@ -25,14 +26,7 @@ class RealDataset:
             df_sim = spl.random_sample(model, nms, n)
             df_sim = spl.nam2num(df_sim)
 
-            if d < df_sim.shape[1]:
-                sub_nodes = self.select_sub_graph(d)
-                df_sim = df_sim.iloc[sub_nodes, sub_nodes]
-                B_bin = self.B_bin[sub_nodes, :]
-                B_bin = B_bin[:, sub_nodes]
-                self.B_bin = B_bin
-
-            self.X_true = df_sim.to_numpy()
+            
 
             # Add missing values
             '''
@@ -45,27 +39,37 @@ class RealDataset:
             mnar_p: the same with mar_p
             '''        
             if miss_type == 'mcar':
-                df_miss = spl.add_missing_data(df_sim, mode='mcar', seed=10, mcar_p=miss_percent)
+                df_miss = spl.add_missing_data(df_sim, mode='mcar', seed=seed, mcar_p=miss_percent)
             elif miss_type == 'mar':
-                df_miss = spl.add_missing_data(df_sim, mode='mar', seed=10, mar_p=[1-miss_percent, miss_percent])
+                df_miss = spl.add_missing_data(df_sim, mode='mar', seed=seed, mar_p=[1-miss_percent, miss_percent])
             elif miss_type == 'mnar':
-                df_miss = spl.add_missing_data(df_sim, mode='mnar', seed=10, mar_p=[1-miss_percent, miss_percent])
+                df_miss = spl.add_missing_data(df_sim, mode='mnar', seed=seed, mar_p=[1-miss_percent, miss_percent])
             else:
                 raise ValueError('Unknown missing type!')
+
+            if d < df_sim.shape[1]:
+                sub_nodes = self.select_sub_graph(d)
+                df_sim = df_sim.iloc[:, sub_nodes]
+                df_miss = df_miss.iloc[:, sub_nodes]
+                B_bin = self.B_bin[sub_nodes, :]
+                B_bin = B_bin[:, sub_nodes]
+                self.B_bin = B_bin
+                
+
+            self.X_true = df_sim.to_numpy()
             self.X = df_miss.to_numpy()
+            print(self.X_true.shape, self.X.shape)
             package = (self.B_bin, self.X_true, self.X)
             write_pickle(package, self.data_path)
 
             
-
-
-
     def select_sub_graph(self, num_nodes): 
         selected = set()
-        edges = np.argwhere(self.B_bin) 
+        edges = np.argwhere(self.B_bin).tolist()
+        random.shuffle(edges)
         for i, j in edges:
             selected.add(i)
             selected.add(j)
-            if len(selected) == num_nodes:
+            if len(selected) >= num_nodes:
                 break 
         return list(selected)
