@@ -86,7 +86,7 @@ def extract_otm_missdag(output, method, sem_type):
                 output[code][method]['RMSE'] = 'NA'
     return output
 
-sem_type = 'mim'
+sem_type = 'gp-add'
 output = extract_baseline({}, sem_type)
 output = extract_otm_missdag(output, 'otm', sem_type)
 output = extract_otm_missdag(output, 'missdag', sem_type)
