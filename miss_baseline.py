@@ -19,6 +19,8 @@ dataset, config = get_data(config_id, graph_type, sem_type)
 code = f"{config['code']}-{method}"
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+if graph_type == 'REAL':
+    dataset.X = dataset.X.astype("float32") 
 
 X = torch.from_numpy(dataset.X).to(device)
 X_true = torch.from_numpy(dataset.X_true).to(device)
@@ -81,23 +83,31 @@ elif method == 'mean':
 
 elif method == 'iterative':
     X_filled = IterativeImputer(random_state=0, max_iter=50).fit_transform(dataset.X)
+
+if method != 'complete':
+
+    try:
+        mae = MAE(X_filled, X_true, mask).item()
+        rmse = RMSE(X_filled, X_true, mask).item()
+    except TypeError:
+        X_filled = torch.from_numpy(X_filled).to(device)
+        mae = MAE(X_filled, X_true, mask).item()
+        rmse = RMSE(X_filled, X_true, mask).item()
     
-
-try:
-    mae = MAE(X_filled, X_true, mask).item()
-    rmse = RMSE(X_filled, X_true, mask).item()
-except TypeError:
-    X_filled = torch.from_numpy(X_filled).to(device)
-    mae = MAE(X_filled, X_true, mask).item()
-    rmse = RMSE(X_filled, X_true, mask).item()
+    if sem_type == 'real':
+        X_filled = torch.sigmoid(X_filled) * mask + X_true * (1 - mask)
+        X_filled = torch.where(X_filled > 0.5, 1.0, 0.0)
+        rmse = ((X_filled == X_true).sum(-1) / X_true.shape[1]).mean() # that is accuracy
 
 
-# =============== WRITE IMPUTATION ===============
-file = open(f'output/baseline_{sem_type}_imputation.txt', 'a+')
-file.write(f'{code}\n')
-file.write(f'MAE: {mae}, RMSE: {rmse}\n')
-file.write('======================\n')
-file.close()
+    # =============== WRITE IMPUTATION ===============
+    file = open(f'output/baseline_{sem_type}_imputation.txt', 'a+')
+    file.write(f'{code}\n')
+    file.write(f'MAE: {mae}, RMSE: {rmse}\n')
+    file.write('======================\n')
+    file.close()
+else: 
+    X_filled = X_true
 
 print(f'Learning DAG for {config["sem_type"]} model begins ...')
 
@@ -111,7 +121,6 @@ if config['sem_type'] == 'linear':
 
 else:
     from dagma import DagmaMLP, DagmaNonlinear
-    
     eq_model = DagmaMLP(dims=[d, d, 1], device=device, bias=True)
     eq_model.to(device)
     model = DagmaNonlinear(eq_model)
@@ -123,9 +132,15 @@ else:
 
 # =============== WRITE GRAPH ===============
 
-saved_path = f'output/baseline_{sem_type}.txt'
+if method == 'complete':
+    saved_path = f'output/complete_{sem_type}.txt'
+else:
+    saved_path = f'output/baseline_{sem_type}.txt'
 
 from utils.eval import evaluate, write_result
-raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3)
+if graph_type == 'REAL':
+    raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3, prune=False)
+else:
+    raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3)
 
 write_result(raw_result, code, saved_path)
