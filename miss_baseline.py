@@ -95,7 +95,7 @@ if method != 'complete':
         rmse = RMSE(X_filled, X_true, mask).item()
     
     if sem_type == 'real':
-        X_filled = torch.sigmoid(X_filled) * mask + X_true * (1 - mask)
+        X_filled = torch.clamp(X_filled, 0.0, 1.0)
         X_filled = torch.where(X_filled > 0.5, 1.0, 0.0)
         rmse = ((X_filled == X_true).sum(-1) / X_true.shape[1]).mean() # that is accuracy
 
