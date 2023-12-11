@@ -1,6 +1,6 @@
-dataset/
-models/
 output/
+figures/
 __pycache__
 utils/__pycache__
 OTM.xlsx
+dataset.zip

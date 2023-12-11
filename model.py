@@ -1,7 +1,7 @@
 import torch, ot
 import torch.nn as nn
 import numpy as np
-from utils.arch import MLP
+from utils.arch import MLP, AttentionMLP
 from utils.missing import nanmean
 from dagma import DagmaMLP
 from tqdm.auto import tqdm
@@ -12,7 +12,7 @@ def exact_ot_cost(X, Y, cost_fn = 'euclidean'):
     unif = torch.ones((batchsize,), device = X.device) / batchsize
     if cost_fn == 'euclidean':
         # M = torch.cdist(x, y, p=2)
-        M = ot.dist(X, Y, metric='euclidean')
+        M = ot.dist(X, Y)
     else:
         M = torch.zeros((batchsize, batchsize), device = X.device)
         for i in range(batchsize): 
@@ -77,7 +77,38 @@ class SuperImputer(nn.Module):
         imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
         x = imps * self.mask + x
         return x 
+
+class RealImputer(nn.Module): 
+    def __init__(self, data, mask, hidden_dims, initialized = None):
+        super(RealImputer, self).__init__()
+        print('Using Super imputation ...')
+        self.D = hidden_dims[0]        
+        self.mu = MLP(hidden_dims, nn.ReLU())
+        self.var = MLP(hidden_dims, nn.ReLU())
+
+        self.data = data 
+        self.mask = mask
+        self.initialized = initialized
+
+        if initialized == 'learnable':
+            imps = (torch.randn(data.shape, device = mask.device) + nanmean(data, 0))[mask.bool()]
+            self.imps = nn.Parameter(imps)
+    
+    def forward(self): 
+        x = self.data.clone()  
+        if self.initialized is None: # pre-imputed with zeros
+            x[self.mask.bool()] = 0.0
+
+        elif self.initialized == 'learnable':
+            x[self.mask.bool()] = self.imps
         
+        logvar = self.var(x)
+        imps = self.mu(x) + torch.exp(0.1 * logvar) * torch.randn_like(x)
+        imps = torch.relu(torch.tanh(imps))
+        x = imps * self.mask + x
+
+        return x 
+
 class SimpleImputer(nn.Module): 
     def __init__(self, data, mask):
         super(SimpleImputer, self).__init__()
@@ -93,7 +124,9 @@ class SimpleImputer(nn.Module):
         x = self.data.clone()  
         x[self.mask.bool()] = self.imps        
         return x
-        
+
+
+
 class MissModel(nn.Module):
     def __init__(self, data, mask, hidden_dims, device, sem_type, initialized = None):
         super(MissModel, self).__init__()
@@ -102,7 +135,11 @@ class MissModel(nn.Module):
         self.sem_type = sem_type    
         
         self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
-        self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
+
+        if sem_type == "real":
+            self.imputer = RealImputer(data, mask, [self.d, self.d, self.d], initialized)
+        else:
+            self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
         
         
         
@@ -113,6 +150,7 @@ class MissModel(nn.Module):
         '''
         x : torch.Tensor shape (N,D)
         '''
+
         x = self.imputer()      
         # reconstruction from the imputations
         xhat = self.scm(x)
