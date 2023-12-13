@@ -134,6 +134,7 @@ else:
 
 if method == 'complete':
     saved_path = f'output/complete_{sem_type}.txt'
+    code = f"{config['code']}"
 else:
     saved_path = f'output/baseline_{sem_type}.txt'
 

@@ -86,10 +86,11 @@ def extract_otm_missdag(output, method, sem_type):
                 output[code][method]['RMSE'] = 'NA'
     return output
 
-sem_type = 'real'
-output = extract_baseline({}, sem_type)
+sem_type = 'mlp'
+output = extract_baseline({}, sem_type) 
 output = extract_otm_missdag(output, 'otm', sem_type)
-# output = extract_otm_missdag(output, 'missdag', sem_type)
+output = extract_otm_missdag(output, 'complete', sem_type)
+output = extract_otm_missdag(output, 'missdag', sem_type)
 # print(output)
 
 code = []
@@ -99,6 +100,7 @@ mean = []
 sk = []
 linrr = []
 iterative = []
+complete = []
 metrics = []
 
 output = dict(sorted(output.items()))
@@ -107,7 +109,12 @@ for key, value in output.items():
     for m in ('F1', 'tpr', 'shd', 'MAE', 'RMSE'):
         code.append(key)
         otm.append(value['otm'][m])
-        # missdag.append(value['missdag'][m]) 
+
+        if m in ('MAE', 'RMSE'):
+            complete.append(0)
+        else:
+            complete.append(value['complete'][m])
+        missdag.append(value['missdag'][m]) 
         mean.append(value['mean'][m]) 
         sk.append(value['sk'][m]) 
         linrr.append(value['lin-rr'][m]) 
@@ -122,7 +129,8 @@ df = pd.DataFrame(data={
     'Mean Imputer': mean, 
     'SK Imputer': sk,
     'RR Imputer': linrr, 
-    'Iterative Imputer': iterative
+    'Iterative Imputer': iterative,
+    'Complete': complete,
 })
 
 df.to_csv('output/final.csv', index = False)
