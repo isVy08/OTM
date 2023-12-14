@@ -2,7 +2,7 @@ import ot
 import torch
 import numpy as np
 
-def _ot(X, W):
+def manual_ot(X, W):
     M = X @ W
     C = 0.5 * ot.dist(X,M, metric='sqeuclidean')
     
@@ -14,11 +14,11 @@ def _ot(X, W):
     G_X = []
 
     for i in range(X.shape[0]): 
-        G_X_i = 0
-        # itself (X_i - X_iW)^2
-        # by row (X_i - X_jW)^2
+        G_Xai = 0
+        # itself (Xai - XaiW)^2
+        # by row (Xai - XajW)^2
         grad_row = 0
-        # by column (X_j - X_iW)^2
+        # by column (Xaj - XaiW)^2
         grad_col = 0
         grad_self =  1.0 * ((X[i:i+1, ] - M[i:i+1, ]) @ (I - W.T)) * P[i,i]
         for j in range(n):
@@ -26,8 +26,8 @@ def _ot(X, W):
             if i != j:
                 grad_row +=  1.0 * ((X[i:i+1, ] - M[j:j+1, ]) @ I) * P[i,j]
                 grad_col +=  1.0 * ((X[j:j+1, ] - M[i:i+1, ]) @ (-W.T)) * P[j,i]
-        G_X_i = grad_self + grad_row + grad_col
-        G_X.append(G_X_i)
+        G_Xai = grad_self + grad_row + grad_col
+        G_X.append(G_Xai)
 
     G_W = G_W / (X.shape[0] * X.shape[0])
     G_X = np.concatenate(G_X, axis = 0) / (X.shape[0] * X.shape[0])
@@ -35,11 +35,11 @@ def _ot(X, W):
     
     return loss, G_W, G_X
 
-def _auto_ot(X_, W_):
+def auto_ot(Xa, Wa, wrt='x'):
     
-    X = torch.from_numpy(X_)
+    X = torch.from_numpy(Xa)
     X.requires_grad = True
-    W = torch.from_numpy(W_)
+    W = torch.from_numpy(Wa)
     W.requires_grad = True
 
     M = X @ W
@@ -51,6 +51,11 @@ def _auto_ot(X_, W_):
 
     loss = (C * P).mean() 
     loss.backward()
-    G_W = W.grad.detach().numpy()
-    G_X = X.grad.detach().numpy()
-    return loss.detach().numpy(), G_W, G_X
+    loss = loss.detach().numpy()
+    if wrt == 'x':
+        g = X.grad.detach().numpy()
+        return loss, g
+    else:
+        g = W.grad.detach().numpy()
+        return loss, g
+    
