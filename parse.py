@@ -94,7 +94,7 @@ def extract_otm_missdag(output, method, sem_type, version):
 
 def collect(method, sem_type): 
 
-    for i in range(1,3):
+    for i in range(1,4):
         version = f'v{i}'
         if i == 1:
             if method == 'baseline':
@@ -105,12 +105,13 @@ def collect(method, sem_type):
             if method == 'baseline':
                 temp = extract_baseline({}, sem_type, version)
             else:
+                if method == 'missdag': version = 'v1'
                 temp = extract_otm_missdag({}, method, sem_type, version)
             # levels: code > method > metric = value
             for code, l1_val in temp.items():
-                for method, l2_val in l1_val.items():  
+                for mth, l2_val in l1_val.items():  
                     for metric, value in l2_val.items():
-                        output[code][method][metric].extend(value)
+                        output[code][mth][metric].extend(value)
     return output
 
 def output_to_df(output, sem_type):
@@ -158,7 +159,7 @@ def output_to_df(output, sem_type):
 
 
 sem_type = sys.argv[1]
-# sem_type = 'mlp'
+# sem_type = 'mim'
 output = collect('otm', sem_type)
 output_baseline = collect('baseline', sem_type)
 output_missdag = collect('missdag', sem_type)
