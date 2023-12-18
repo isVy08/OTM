@@ -1,6 +1,7 @@
 import pandas as pd 
 from utils.io import load_txt
 import numpy as np
+import sys
 from utils.io import write_pickle
 '''
 Columns: Code, OTM, Mean, SK, RR, Iterative, MissDag
@@ -156,7 +157,8 @@ def output_to_df(output, sem_type):
     df.to_csv(f'output/{sem_type}.csv', index = False)
 
 
-sem_type = 'mlp'
+sem_type = sys.argv[1]
+# sem_type = 'mlp'
 output = collect('otm', sem_type)
 output_baseline = collect('baseline', sem_type)
 output_missdag = collect('missdag', sem_type)
@@ -171,4 +173,3 @@ for code in output:
         output[code][method] = output_missdag[code][method]
 
 write_pickle(output, f'output/{sem_type}.pickle')
-# output_to_df(output, sem_type)

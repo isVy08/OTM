@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 from utils.io import load_pickle
+import sys
 
 '''
 Sem type: Linear, MLP, MIM, GP-ADD, REAL
@@ -28,20 +29,28 @@ names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer',
          'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
 
 # Block configurations
-sem_type = 'mlp'
+sem_type = sys.argv[1]
+graph_type = sys.argv[2]
+
+# sem_type = 'mlp'
+# graph_type = 'ER'
 output = load_pickle(f'output/{sem_type}.pickle')
-graph_type = 'ER'
+
 rows = ['shd', 'F1', 'tpr']
 cols = ['MCAR', 'MAR', 'MNAR']
 
+if sem_type == 'gp-add': sem_type = 'gpadd'
 # Visualization of causal discovery
-fig, axs = plt.subplots(3,3, figsize=(13,6), sharex=True)
+nrows = 2 
+ncols = 3
+fig, axs = plt.subplots(nrows,ncols, figsize=(13,6), sharex=True)
 
-for r in range(3): 
-    for c in range(3): 
+for r in range(nrows): 
+    for c in range(ncols): 
         metric, mst = rows[r], cols[c]
         codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
         for method, color in colors.items():
+            
             means = [np.mean(output[code][method][metric]) for code in codes]
             errs = [np.std(output[code][method][metric]) for code in codes]
             axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], alpha=0.5)
@@ -55,6 +64,7 @@ for r in range(3):
                 axs[r,c].set_title(mst)
             
 
-axs[2,2].legend(bbox_to_anchor=[0.6, -0.38, 0.2, 0.2], ncol=6)
+i = nrows//2
+axs[i,i].legend(bbox_to_anchor=[2.0, -0.32, 0.2, 0.2], ncol=6)
 # plt.tight_layout()
-plt.savefig('figures/test.png')
+plt.savefig(f'figures/{sem_type}-{graph_type}.png')
