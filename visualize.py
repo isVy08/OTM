@@ -35,7 +35,7 @@ rows = ['shd', 'F1', 'tpr']
 cols = ['MCAR', 'MAR', 'MNAR']
 
 # Visualization of causal discovery
-fig, axs = plt.subplots(3,3, figsize=(10,6), sharex=True)
+fig, axs = plt.subplots(3,3, figsize=(13,6), sharex=True)
 
 for r in range(3): 
     for c in range(3): 
@@ -44,11 +44,17 @@ for r in range(3):
         for method, color in colors.items():
             means = [np.mean(output[code][method][metric]) for code in codes]
             errs = [np.std(output[code][method][metric]) for code in codes]
-            # axs[r,c].plot([0.1, 0.3, 0.5], means, '-', c=color, marker='o', label=names[method])
-            axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], alpha=0.9)
+            axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], alpha=0.5)
             axs[r,c].grid(axis='both', color='0.95', linestyle='--')
+            if c > 0:
+                axs[r,c].get_yaxis().set_visible(False)
+            else: 
+                axs[r,c].set_ylabel(metric.upper())
 
+            if r == 0:
+                axs[r,c].set_title(mst)
+            
 
-# plt.legend(loc="lower center", ncol=3)
-plt.tight_layout()
+axs[2,2].legend(bbox_to_anchor=[0.6, -0.38, 0.2, 0.2], ncol=6)
+# plt.tight_layout()
 plt.savefig('figures/test.png')
