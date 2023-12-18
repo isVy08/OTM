@@ -1,6 +1,7 @@
 import pandas as pd 
 from utils.io import load_txt
 import numpy as np
+from utils.io import write_pickle
 '''
 Columns: Code, OTM, Mean, SK, RR, Iterative, MissDag
 Rows: Fscore, Gscore, SDH
@@ -25,7 +26,7 @@ def extract_baseline(output, sem_type, version):
         elif 'F1' in line or 'tpr' in line or 'shd' in line:
             v = line.split(' : ')[-1]
             m = line.split(' : ')[0]
-            output[code][method][m] = 0.2 * float(v)
+            output[code][method][m] = [float(v)]
 
     imputation = load_txt(f'output/{version}/baseline_{sem_type}_imputation.txt')
    
@@ -42,8 +43,8 @@ def extract_baseline(output, sem_type, version):
         elif 'MAE' in line: 
             mae = line.split(', ')[0].split(': ')[-1]
             rmse = line.split(', ')[1].split(': ')[-1]
-            output[code][method]['MAE'] = 0.2 * np.round(float(mae), 4)
-            output[code][method]['RMSE'] = 0.2 * np.round(float(rmse), 4)
+            output[code][method]['MAE'] = [np.round(float(mae), 4)]
+            output[code][method]['RMSE'] = [np.round(float(rmse), 4)]
     return output
 
 def extract_otm_missdag(output, method, sem_type, version):  
@@ -64,7 +65,7 @@ def extract_otm_missdag(output, method, sem_type, version):
             m = line.split(' : ')[0]
             if method not in output[code]:
                 output[code][method] = {}
-            output[code][method][m] = 0.2 * float(value)
+            output[code][method][m] = [float(value)]
     
     if method == 'otm':
         imputation = load_txt(f'output/{version}/otm_{sem_type}_imputation.txt')
@@ -77,8 +78,8 @@ def extract_otm_missdag(output, method, sem_type, version):
             elif 'MAE' in line: 
                 mae = line.split(', ')[0].split(': ')[-1]
                 rmse = line.split(', ')[1].split(': ')[-1]
-                output[code][method]['MAE'] = 0.2 * np.round(float(mae), 4)
-                output[code][method]['RMSE'] = 0.2 * np.round(float(rmse), 4)
+                output[code][method]['MAE'] = [np.round(float(mae), 4)]
+                output[code][method]['RMSE'] = [np.round(float(rmse), 4)]
     else:
         for line in graph:
             if 'ER' in line or 'SF' in line or 'REAL' in line:
@@ -86,13 +87,13 @@ def extract_otm_missdag(output, method, sem_type, version):
                     line = line.replace('GP-ADD', 'GPADD')
                 code = line
             else:
-                output[code][method]['MAE'] = 0
-                output[code][method]['RMSE'] = 0
+                output[code][method]['MAE'] = [0]
+                output[code][method]['RMSE'] = [0]
     return output
 
 def collect(method, sem_type): 
 
-    for i in range(1, 6):
+    for i in range(1,3):
         version = f'v{i}'
         if i == 1:
             if method == 'baseline':
@@ -108,7 +109,7 @@ def collect(method, sem_type):
             for code, l1_val in temp.items():
                 for method, l2_val in l1_val.items():  
                     for metric, value in l2_val.items():
-                        output[code][method][metric] += value  
+                        output[code][method][metric].extend(value)
     return output
 
 def output_to_df(output, sem_type):
@@ -155,4 +156,19 @@ def output_to_df(output, sem_type):
     df.to_csv(f'output/{sem_type}.csv', index = False)
 
 
-output_otm = collect('otm', 'mlp')
+sem_type = 'mlp'
+output = collect('otm', sem_type)
+output_baseline = collect('baseline', sem_type)
+output_missdag = collect('missdag', sem_type)
+
+
+# Combine output
+
+for code in output:
+    for method in output_baseline[code]:
+        output[code][method] = output_baseline[code][method]
+    for method in output_missdag[code]:
+        output[code][method] = output_missdag[code][method]
+
+write_pickle(output, f'output/{sem_type}.pickle')
+# output_to_df(output, sem_type)

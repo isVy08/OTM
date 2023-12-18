@@ -1,7 +1,6 @@
-import seaborn as sns
 import matplotlib.pyplot as plt
-import pandas as pd
-import re
+import numpy as np
+from utils.io import load_pickle
 
 '''
 Sem type: Linear, MLP, MIM, GP-ADD, REAL
@@ -9,53 +8,47 @@ Graph type: ER, SF, Real
 Miss type: MCAR, MAR, MNAR 
 Miss percent: 0.1, 0.3, 0.5
 Metric: TPR, F1, SHD, MAE, RMSE
+
+Visualize a block of 9 figures of 3 miss types & 3 metrics: each plot at different miss percent
+Repeat the block for different sem types and graph types
 '''
 
-def code_to_config(code):
-    sem_type, code = code.split('-')
-    config_id = re.findall(r"\d+", code)
-    config_id = int(config_id[0])
-    graph_type = code.replace(str(config_id), '')
-    
-    if config_id in (1,2,3):
-        miss_type = 'MCAR'
-    elif config_id in (4,5,6):
-        miss_type = 'MAR'
-    elif config_id in (7,8,9):
-        miss_type = 'MNAR'
-    
-    if config_id in (1,4,7):
-        miss_percent = 0.1
-    elif config_id in (2,5,8):
-        miss_percent = 0.3
-    if config_id in (3,6,9):
-        miss_percent = 0.5
-    
-    return sem_type, graph_type, miss_type, miss_percent
 
-        
+miss_types = {'MCAR': [1,2,3], 'MAR': [4,5,6], 'MNAR': [7,8,9]}
+miss_percents = {0.1: [1,4,7], 0.3: [2,5,8], 0.5: [3,6,9]}
 
-df = pd.read_csv('output/final.csv')
-df['SEM'] = df['Code'].map(lambda x: code_to_config(x)[0])
-df['Graph'] = df['Code'].map(lambda x: code_to_config(x)[1])
-df['Mechanism'] = df['Code'].map(lambda x: code_to_config(x)[2])
-df['Percent'] = df['Code'].map(lambda x: code_to_config(x)[3])
+colors = {'otm': "red", 
+          'missdag': "blue", 
+          "mean": "green",
+          "sk": "grey",
+          "lin-rr": "orange", 
+          "iterative": "purple"}
+
+names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
+         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
+
+# Block configurations
+sem_type = 'mlp'
+output = load_pickle(f'output/{sem_type}.pickle')
+graph_type = 'ER'
+rows = ['shd', 'F1', 'tpr']
+cols = ['MCAR', 'MAR', 'MNAR']
+
+# Visualization of causal discovery
+fig, axs = plt.subplots(3,3, figsize=(10,6), sharex=True)
+
+for r in range(3): 
+    for c in range(3): 
+        metric, mst = rows[r], cols[c]
+        codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
+        for method, color in colors.items():
+            means = [np.mean(output[code][method][metric]) for code in codes]
+            errs = [np.std(output[code][method][metric]) for code in codes]
+            # axs[r,c].plot([0.1, 0.3, 0.5], means, '-', c=color, marker='o', label=names[method])
+            axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], alpha=0.9)
+            axs[r,c].grid(axis='both', color='0.95', linestyle='--')
 
 
-metric = 'tpr'
-graph = 'ER'
-miss_type = 'MCAR'
-sub_df = df.loc[(df['Metric']==metric) & (df['Graph']==graph) & (df['Mechanism']==miss_type), ]
-colors = {'OTM': "red", 
-          'MissDAG': "blue", 
-          "Mean Imputer": "green",
-          "SK Imputer": "yellow",
-          "RR Imputer": "orange", 
-          "Iterative Imputer": "purple"}
-
-fig = plt.figure()
-for method, color in colors.items(): 
-    plt.plot(sub_df['Percent'], sub_df[method], '-', marker='o', c=color, label=method)
-
-plt.legend(loc="lower center", ncol=3)
+# plt.legend(loc="lower center", ncol=3)
+plt.tight_layout()
 plt.savefig('figures/test.png')
