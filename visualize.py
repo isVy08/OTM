@@ -41,7 +41,7 @@ cols = ['MCAR', 'MAR', 'MNAR']
 
 if sem_type == 'gp-add': sem_type = 'gpadd'
 # Visualization of causal discovery
-nrows = 2 
+nrows = 3
 ncols = 3
 fig, axs = plt.subplots(nrows,ncols, figsize=(13,6), sharex=True)
 
@@ -53,7 +53,7 @@ for r in range(nrows):
             
             means = [np.mean(output[code][method][metric]) for code in codes]
             errs = [np.std(output[code][method][metric]) for code in codes]
-            axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], alpha=0.5)
+            axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='^', label=names[method], alpha=0.6)
             axs[r,c].grid(axis='both', color='0.95', linestyle='--')
             if c > 0:
                 axs[r,c].get_yaxis().set_visible(False)
@@ -64,7 +64,10 @@ for r in range(nrows):
                 axs[r,c].set_title(mst)
             
 
-i = nrows//2
-axs[i,i].legend(bbox_to_anchor=[2.0, -0.32, 0.2, 0.2], ncol=6)
+i = nrows - 1
+if nrows == 3:
+    axs[i,i].legend(bbox_to_anchor=[0.5, -0.4, 0.2, 0.2], ncol=6)
+else:
+    axs[i,i].legend(bbox_to_anchor=[2.0, -0.23, 0.2, 0.2], ncol=6)
 # plt.tight_layout()
 plt.savefig(f'figures/{sem_type}-{graph_type}.png')

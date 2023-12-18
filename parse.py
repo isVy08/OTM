@@ -5,7 +5,7 @@ import sys
 from utils.io import write_pickle
 '''
 Columns: Code, OTM, Mean, SK, RR, Iterative, MissDag
-Rows: Fscore, Gscore, SDH
+Rows: Fscore, tpr, SDH
 '''
 
 def extract_baseline(output, sem_type, version):
@@ -24,7 +24,7 @@ def extract_baseline(output, sem_type, version):
             method = '-'.join(method)
             if method not in output[code]:
                 output[code][method] = {}
-        elif 'F1' in line or 'tpr' in line or 'shd' in line:
+        elif 'F1' in line or 'tpr' in line or 'shd' in line or 'gscore' in line:
             v = line.split(' : ')[-1]
             m = line.split(' : ')[0]
             output[code][method][m] = [float(v)]
@@ -61,7 +61,7 @@ def extract_otm_missdag(output, method, sem_type, version):
             if code not in output:
                 output[code] = {}
 
-        elif 'F1' in line or 'tpr' in line or 'shd' in line:
+        elif 'F1' in line or 'tpr' in line or 'shd' in line or 'gscore' in line:
             value = line.split(' : ')[-1]
             m = line.split(' : ')[0]
             if method not in output[code]:
@@ -94,7 +94,7 @@ def extract_otm_missdag(output, method, sem_type, version):
 
 def collect(method, sem_type): 
 
-    for i in range(1,4):
+    for i in (1,2,3):
         version = f'v{i}'
         if i == 1:
             if method == 'baseline':

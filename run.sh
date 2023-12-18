@@ -1,4 +1,11 @@
-for i in mlp mim gp-add
+rm figures/*.png
+# rm output/*.pickle
+# for i in mlp mim
+# do
+#     python parse.py $i
+# done
+
+for i in mlp mim
 do
     for j in ER SF
     do
