@@ -24,7 +24,7 @@ def extract_baseline(output, sem_type, version):
             method = '-'.join(method)
             if method not in output[code]:
                 output[code][method] = {}
-        elif 'F1' in line or 'tpr' in line or 'shd' in line or 'gscore' in line:
+        elif 'F1' in line or 'tpr' in line or 'shd' in line or 'gscore' in line or 'precision' in line:
             v = line.split(' : ')[-1]
             m = line.split(' : ')[0]
             output[code][method][m] = [float(v)]
@@ -61,7 +61,7 @@ def extract_otm_missdag(output, method, sem_type, version):
             if code not in output:
                 output[code] = {}
 
-        elif 'F1' in line or 'tpr' in line or 'shd' in line or 'gscore' in line:
+        elif 'F1' in line or 'tpr' in line or 'shd' in line or 'gscore' in line or 'precision' in line:
             value = line.split(' : ')[-1]
             m = line.split(' : ')[0]
             if method not in output[code]:
@@ -94,7 +94,9 @@ def extract_otm_missdag(output, method, sem_type, version):
 
 def collect(method, sem_type): 
 
-    for i in (1,2,3):
+    seeds = (1,2,3)
+
+    for i in seeds:
         version = f'v{i}'
         if i == 1:
             if method == 'baseline':
@@ -136,7 +138,10 @@ def output_to_df(output, sem_type):
                 complete.append(0)
             else:
                 complete.append(value['complete'][m])
-            missdag.append(value['missdag'][m]) 
+            if 'missdag' not in value:
+                missdag.append(0)
+            else:     
+                missdag.append(value['missdag'][m]) 
             mean.append(value['mean'][m]) 
             sk.append(value['sk'][m]) 
             linrr.append(value['lin-rr'][m]) 
@@ -159,18 +164,27 @@ def output_to_df(output, sem_type):
 
 
 sem_type = sys.argv[1]
-# sem_type = 'mim'
-output = collect('otm', sem_type)
-output_baseline = collect('baseline', sem_type)
-output_missdag = collect('missdag', sem_type)
 
 
 # Combine output
+        
+if sem_type == 'real':
+    output = extract_baseline({}, sem_type, sem_type)
+    output = extract_otm_missdag(output, 'otm', sem_type, sem_type)
+    output = extract_otm_missdag(output, 'missdag', sem_type, sem_type)
+    output = extract_otm_missdag(output, 'complete', sem_type, sem_type)
+    # output_to_df(output, sem_type)
+else:
+    # sem_type = 'mim'
+    output = collect('otm', sem_type)
+    output_baseline = collect('baseline', sem_type)
+    output_missdag = collect('missdag', sem_type)
 
-for code in output:
-    for method in output_baseline[code]:
-        output[code][method] = output_baseline[code][method]
-    for method in output_missdag[code]:
-        output[code][method] = output_missdag[code][method]
+    for code in output:
+        for method in output_baseline[code]:
+            output[code][method] = output_baseline[code][method]
+        for method in output_missdag[code]:
+            output[code][method] = output_missdag[code][method]
 
 write_pickle(output, f'output/{sem_type}.pickle')
+        
