@@ -15,8 +15,8 @@ Repeat the block for different sem types and graph types
 '''
 
 # Block configurations
-miss_types = {'MCAR': [1,2,3, 11,12,13], 'MAR': [4,5,6, 14,15,16], 'MNAR': [7,8,9, 17,18,19]}
-miss_percents = {0.1: [1,4,7, 11,14,17], 0.3: [2,5,8, 12,15,18], 0.5: [3,6,9, 13,16,19]}
+miss_types = {'MCAR': [1,2,3], 'MAR': [4,5,6], 'MNAR': [7,8,9]}
+miss_percents = {0.1: [1,4,7], 0.3: [2,5,8], 0.5: [3,6,9]}
 
 colors = {'otm': "red", 
           'missdag': "blue", 
@@ -36,7 +36,7 @@ def plot(rows, cols, sem_type, graph_type, kind):
         for c in range(ncols): 
             metric, mst = rows[r], cols[c]
             if sem_type == 'real':
-                codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst] if i > 10]
+                codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]
             else:
                 codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
             for method, color in colors.items():
@@ -83,6 +83,7 @@ else:
 
 plot(rows, cols, sem_type, graph_type, 'SL')
 
-rows = ['MAE', 'RMSE']
-cols = ['MCAR', 'MAR', 'MNAR']
-plot(rows, cols, sem_type, graph_type, 'MI')
+if sem_type != 'real':
+    rows = ['MAE', 'RMSE']
+    cols = ['MCAR', 'MAR', 'MNAR']
+    plot(rows, cols, sem_type, graph_type, 'MI')
