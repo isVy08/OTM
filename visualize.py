@@ -37,7 +37,7 @@ def plot(rows, cols, sem_type, graph_type, kind):
     for r in range(nrows): 
         for c in range(ncols): 
             metric, mst = rows[r], cols[c]
-            if sem_type == 'real':
+            if graph_type == 'REAL':
                 codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]
             else:
                 codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
@@ -74,7 +74,7 @@ output = load_pickle(f'output/{sem_type}.pickle')
 if sem_type == 'gp-add': sem_type = 'gpadd'
 
 # Visualization of causal discovery
-if sem_type == 'real':
+if graph_type == 'REAL':
 
     rows = ['F1', 'tpr']
     cols = ['MCAR', 'MAR', 'MNAR']
@@ -85,7 +85,7 @@ else:
 
 plot(rows, cols, sem_type, graph_type, 'SL')
 
-if sem_type != 'real':
+if sem_type != 'neuro':
     if 'missdag' in colors: del colors['missdag']
     rows = ['MAE', 'RMSE']
     cols = ['MCAR', 'MAR', 'MNAR']

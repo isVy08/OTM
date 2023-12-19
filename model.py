@@ -219,12 +219,12 @@ class DagmaNonlinear:
             
             l1_reg = lambda1 * self.model.scm.fc1_l1_reg()
             
-            if self.model.sem_type not in ('mlp', 'real'):
-                obj = mu * (score + l1_reg) + h_val + 1.5 * rbf_kernel(Xhat, X)
-            elif self.model.sem_type == 'neuro':
+            if self.model.sem_type == 'neuro':
                 obj = mu * (score + l1_reg) + h_val + 0.001 * rbf_kernel(Xhat, X)
-            else:
+            elif self.model.sem_type == 'mlp':
                 obj = mu * (score + l1_reg) + h_val + 0.01 * rbf_kernel(Xhat, X)
+            else:
+                obj = mu * (score + l1_reg) + h_val + 1.5 * rbf_kernel(Xhat, X)
 
             optimizer.zero_grad()
             # obj.backward()
