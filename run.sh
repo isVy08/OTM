@@ -7,7 +7,7 @@ rm figures/*.png
 
 for i in mlp mim
 do
-    for j in ER SF REAL
+    for j in ER SF
     do
         python visualize.py $i $j
     done

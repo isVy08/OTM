@@ -28,6 +28,8 @@ colors = {'otm': "red",
 names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
          'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
 
+del colors['missdag']
+
 def plot(rows, cols, sem_type, graph_type, kind):
     nrows = len(rows)
     ncols = len(cols)
@@ -40,20 +42,20 @@ def plot(rows, cols, sem_type, graph_type, kind):
             else:
                 codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
             for method, color in colors.items():
-                if method != 'missdag':
-                    means = [np.mean(output[code][method][metric]) for code in codes]
-                    errs = [np.std(output[code][method][metric]) for code in codes]
-                    axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='^', label=names[method], alpha=0.6)
-                    axs[r,c].grid(axis='both', color='0.95', linestyle='--')
-                    if c > 0:
-                        axs[r,c].get_yaxis().set_visible(False)
-                    else: 
-                        axs[r,c].set_ylabel(metric.upper())
-                        # if sem_type =='real': axs[r,c].set_yticks([0.01, 0.03, 0.05])
+                
+                means = [np.mean(output[code][method][metric]) for code in codes]
+                errs = [np.std(output[code][method][metric]) for code in codes]
+                axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='^', label=names[method], alpha=0.6)
+                axs[r,c].grid(axis='both', color='0.95', linestyle='--')
+                if c > 0:
+                    axs[r,c].get_yaxis().set_visible(False)
+                else: 
+                    axs[r,c].set_ylabel(metric.upper())
+                    # if sem_type =='real': axs[r,c].set_yticks([0.01, 0.03, 0.05])
 
-                    if r == 0:
-                        axs[r,c].set_title(mst)
-                    
+                if r == 0:
+                    axs[r,c].set_title(mst)
+                
 
     i = nrows - 1
     if nrows == 3:
@@ -84,6 +86,7 @@ else:
 plot(rows, cols, sem_type, graph_type, 'SL')
 
 if sem_type != 'real':
+    if 'missdag' in colors: del colors['missdag']
     rows = ['MAE', 'RMSE']
     cols = ['MCAR', 'MAR', 'MNAR']
     plot(rows, cols, sem_type, graph_type, 'MI')
