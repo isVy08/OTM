@@ -45,7 +45,7 @@ def plot(rows, cols, sem_type, graph_type, kind):
                 
                 means = [np.mean(output[code][method][metric]) for code in codes]
                 errs = [np.std(output[code][method][metric]) for code in codes]
-                axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='^', label=names[method], alpha=0.6)
+                axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='^', label=names[method])
                 axs[r,c].grid(axis='both', color='0.95', linestyle='--')
                 if c > 0:
                     axs[r,c].get_yaxis().set_visible(False)

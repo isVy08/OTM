@@ -136,7 +136,7 @@ class MissModel(nn.Module):
         
         self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
 
-        if sem_type == "real":
+        if sem_type == "neuro":
             self.imputer = RealImputer(data, mask, [self.d, self.d, self.d], initialized)
         else:
             self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
@@ -221,7 +221,7 @@ class DagmaNonlinear:
             
             if self.model.sem_type not in ('mlp', 'real'):
                 obj = mu * (score + l1_reg) + h_val + 1.5 * rbf_kernel(Xhat, X)
-            elif self.model.sem_type == 'real':
+            elif self.model.sem_type == 'neuro':
                 obj = mu * (score + l1_reg) + h_val + 0.001 * rbf_kernel(Xhat, X)
             else:
                 obj = mu * (score + l1_reg) + h_val + 0.01 * rbf_kernel(Xhat, X)

@@ -169,7 +169,7 @@ sem_type = sys.argv[1]
 
 # Combine output
         
-if sem_type == 'real':
+if sem_type in ('neuro', 'dream4', 'sachs'):
     output = extract_baseline({}, sem_type, sem_type)
     output = extract_otm_missdag(output, 'otm', sem_type, sem_type)
     output = extract_otm_missdag(output, 'missdag', sem_type, sem_type)
