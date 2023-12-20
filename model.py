@@ -66,13 +66,16 @@ class SuperImputer(nn.Module):
             self.imps = nn.Parameter(imps)
     
     def forward(self): 
+        
+        
         x = self.data.clone()  
         if self.initialized is None: # pre-imputed with zeros
             x[self.mask.bool()] = 0.0
 
         elif self.initialized == 'learnable':
             x[self.mask.bool()] = self.imps
-        
+
+    
         logvar = self.var(x)
         imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
         x = imps * self.mask + x
@@ -136,7 +139,7 @@ class MissModel(nn.Module):
         
         self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
 
-        if sem_type == "neuro":
+        if sem_type in ("neuro", 'sachs'):
             self.imputer = RealImputer(data, mask, [self.d, self.d, self.d], initialized)
         else:
             self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
@@ -219,7 +222,7 @@ class DagmaNonlinear:
             
             l1_reg = lambda1 * self.model.scm.fc1_l1_reg()
             
-            if self.model.sem_type == 'neuro':
+            if self.model.sem_type in ('neuro', 'sachs'):
                 obj = mu * (score + l1_reg) + h_val + 0.001 * rbf_kernel(Xhat, X)
             elif self.model.sem_type == 'mlp':
                 obj = mu * (score + l1_reg) + h_val + 0.01 * rbf_kernel(Xhat, X)
