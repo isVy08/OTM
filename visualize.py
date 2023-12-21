@@ -45,7 +45,7 @@ def plot(rows, cols, sem_type, graph_type, kind):
                 
                 means = [np.mean(output[code][method][metric]) for code in codes]
                 errs = [np.std(output[code][method][metric]) for code in codes]
-                axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='^', label=names[method])
+                axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method])
                 axs[r,c].grid(axis='both', color='0.95', linestyle='--')
                 if c > 0:
                     axs[r,c].get_yaxis().set_visible(False)
@@ -85,7 +85,7 @@ else:
 
 plot(rows, cols, sem_type, graph_type, 'SL')
 
-if sem_type != 'neuro':
+if graph_type != 'REAL':
     if 'missdag' in colors: del colors['missdag']
     rows = ['MAE', 'RMSE']
     cols = ['MCAR', 'MAR', 'MNAR']

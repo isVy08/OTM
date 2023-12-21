@@ -169,11 +169,11 @@ sem_type = sys.argv[1]
 
 # Combine output
         
-if sem_type in ('neuro', 'dream4', 'sachs'):
+if sem_type in ('neuro', 'dream1', 'dream2', 'dream3', 'dream4', 'dream5', 'sachs'):
     version = 'real'
     output = extract_baseline({}, sem_type, version)
     output = extract_otm_missdag(output, 'otm', sem_type, version)
-    output = extract_otm_missdag(output, 'missdag', sem_type, version)
+    # output = extract_otm_missdag(output, 'missdag', sem_type, version)
     # output = extract_otm_missdag(output, 'complete', sem_type, version)
     # output_to_df(output, sem_type)
 else:
