@@ -1,9 +1,9 @@
 rm figures/*.png
-# rm output/*.pickle
-# for i in mlp mim
-# do
-#     python parse.py $i
-# done
+rm output/*.pickle
+for i in mlp mim
+do
+    python parse.py $i
+done
 
 for i in mlp mim
 do
@@ -13,4 +13,4 @@ do
     done
 done
 
-python visualize.py real REAL
+# python visualize.py real REAL

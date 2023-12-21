@@ -94,7 +94,7 @@ def extract_otm_missdag(output, method, sem_type, version):
 
 def collect(method, sem_type): 
 
-    seeds = (1,2,3)
+    seeds = (1,2,3,4,5)
     # seeds = (1,1)
 
     for i in seeds:
