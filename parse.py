@@ -2,7 +2,7 @@ import pandas as pd
 from utils.io import load_txt
 import numpy as np
 import sys
-from utils.io import write_pickle
+from utils.io import write_pickle, load_pickle
 '''
 Columns: Code, OTM, Mean, SK, RR, Iterative, MissDag
 Rows: Fscore, tpr, SDH
@@ -164,12 +164,9 @@ def output_to_df(output, sem_type):
     df.to_csv(f'output/{sem_type}.csv', index = False)
 
 
-sem_type = sys.argv[1]
-
-
 # Combine output
-        
-if sem_type in ('neuro', 'dream1', 'dream2', 'dream3', 'dream4', 'dream5', 'sachs'):
+sem_type = sys.argv[1]
+if sem_type in ('neuro', 'sachs') or 'dream' in sem_type:
     version = 'real'
     output = extract_baseline({}, sem_type, version)
     output = extract_otm_missdag(output, 'otm', sem_type, version)
@@ -189,4 +186,3 @@ else:
             output[code][method] = output_missdag[code][method]
 
 write_pickle(output, f'output/{sem_type}.pickle')
-        
