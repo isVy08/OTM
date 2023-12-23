@@ -45,7 +45,11 @@ def plot(rows, cols, sem_type, graph_type, kind):
                 
                 means = [np.mean(output[code][method][metric]) for code in codes]
                 errs = [np.std(output[code][method][metric]) for code in codes]
-                axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method])
+                if graph_type == "REAL":
+                    # errs = [e + (np.random.random(1)[0]* 0.05) for e in errs]
+                    axs[r,c].plot([0.1, 0.3, 0.5], means, c=color, marker='o', label=names[method])
+                else:
+                    axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method])
                 axs[r,c].grid(axis='both', color='0.95', linestyle='--')
                 if c > 0:
                     axs[r,c].get_yaxis().set_visible(False)
@@ -61,7 +65,7 @@ def plot(rows, cols, sem_type, graph_type, kind):
     if nrows == 3:
         axs[i,i].legend(bbox_to_anchor=[0.5, -0.4, 0.2, 0.2], ncol=6)
     else:
-        axs[i,i].legend(bbox_to_anchor=[2.0, -0.23, 0.2, 0.2], ncol=6)
+        axs[i,i].legend(bbox_to_anchor=[1.8, -0.35, 0.2, 0.2], ncol=6)
     # plt.tight_layout()
     plt.savefig(f'figures/{sem_type}-{graph_type}-{kind}.png')
 
@@ -85,8 +89,8 @@ else:
 
 plot(rows, cols, sem_type, graph_type, 'SL')
 
-if graph_type != 'REAL':
-    if 'missdag' in colors: del colors['missdag']
-    rows = ['MAE', 'RMSE']
-    cols = ['MCAR', 'MAR', 'MNAR']
-    plot(rows, cols, sem_type, graph_type, 'MI')
+# if graph_type != 'REAL':
+#     if 'missdag' in colors: del colors['missdag']
+#     rows = ['MAE', 'RMSE']
+#     cols = ['MCAR', 'MAR', 'MNAR']
+#     plot(rows, cols, sem_type, graph_type, 'MI')
