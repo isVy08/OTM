@@ -57,6 +57,12 @@ def get_config(config_id, graph_type, sem_type):
         config['num_vars'] = 30
     elif config_id == 29: 
         config['num_vars'] = 40
+    elif config_id == 30: 
+        config['num_vars'] = 50
+    elif config_id == 31: 
+        config['num_vars'] = 100
+    elif config_id == 32: 
+        config['num_vars'] = 200
     
     
     if sem_type == 'linear': 
@@ -99,6 +105,23 @@ def get_real_config(config_id, graph_type, sem_type):
     if config_id in (13,16,19):
         config['miss_percent'] = 0.5
 
+    if config_id > 20: 
+        config['miss_type'] = 'mcar'
+        config['miss_percent'] = 0.1
+    
+    if config_id == 27: 
+        config['num_vars'] = 20
+    elif config_id == 28: 
+        config['num_vars'] = 30
+    elif config_id == 29: 
+        config['num_vars'] = 40
+    elif config_id == 30: 
+        config['num_vars'] = 50
+    elif config_id == 31: 
+        config['num_vars'] = 100
+    elif config_id == 32: 
+        config['num_vars'] = 200
+
     sem_type = sem_type.upper()
     
     config['code'] = f'{sem_type}-{graph_type}{config_id}'
@@ -109,8 +132,10 @@ def get_data(config_id, graph_type, sem_type, version):
 
     if config_id > 10 and graph_type == 'REAL':
         config = get_real_config(config_id, graph_type, sem_type)
-    else:
+    elif graph_type != 'REAL':
         config = get_config(config_id, graph_type, sem_type)
+    else:
+        raise ValueError('Wrong config!')
     
     if graph_type == 'REAL': 
         dataset = RealDataset(n = config['num_obs'], d = config['num_vars'], 
@@ -136,9 +161,9 @@ def get_data(config_id, graph_type, sem_type, version):
 if __name__ == '__main__':
 
     
-    for config_id in range(11,20):
+    for config_id in range(21,25):
         for graph_type in ('REAL', ):
-            for sem_type in ('sachs', 'dream4'):
+            for sem_type in ('dream1', 'dream2', 'dream3', 'dream5'):
                 get_data(config_id, graph_type, sem_type, version='real')
 
     

@@ -15,5 +15,7 @@
 
 for i in {1..5}
 do
-    python visualize.py dream$i REAL
+    python parse.py dream$i
 done
+python dream.py
+python visualize.py dream REAL

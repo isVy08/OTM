@@ -28,7 +28,7 @@ colors = {'otm': "red",
 names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
          'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
 
-del colors['missdag']
+# del colors['missdag']
 
 def plot(rows, cols, sem_type, graph_type, kind):
     nrows = len(rows)
@@ -47,10 +47,10 @@ def plot(rows, cols, sem_type, graph_type, kind):
                 errs = [np.std(output[code][method][metric]) for code in codes]
                 if graph_type == "REAL":
                     # errs = [e + (np.random.random(1)[0]* 0.05) for e in errs]
-                    axs[r,c].plot([0.1, 0.3, 0.5], means, c=color, marker='o', label=names[method])
+                    axs[r,c].plot([0.1, 0.3, 0.5], means, c=color, marker='o', label=names[method], linewidth=2.5)
                 else:
-                    axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method])
-                axs[r,c].grid(axis='both', color='0.95', linestyle='--')
+                    axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], linewidth=2.5)
+                axs[r,c].grid(axis='both', linestyle='--', color='grey')
                 if c > 0:
                     axs[r,c].get_yaxis().set_visible(False)
                 else: 
