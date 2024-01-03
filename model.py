@@ -106,7 +106,7 @@ class RealImputer(nn.Module):
             x[self.mask.bool()] = self.imps
         
         logvar = self.var(x)
-        imps = self.mu(x) + torch.exp(0.1 * logvar) * torch.randn_like(x)
+        imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
         imps = torch.relu(torch.tanh(imps))
         x = imps * self.mask + x
 
@@ -139,7 +139,7 @@ class MissModel(nn.Module):
         
         self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
 
-        if sem_type in ("neuro", 'sachs'):
+        if sem_type in ("neuro", 'sachs') or 'dream' in sem_type:
             self.imputer = RealImputer(data, mask, [self.d, self.d, self.d], initialized)
         else:
             self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
@@ -222,9 +222,7 @@ class DagmaNonlinear:
             
             l1_reg = lambda1 * self.model.scm.fc1_l1_reg()
             
-            if self.model.sem_type == 'neuro':
-                obj = mu * (score + l1_reg) + h_val + 0.001 * rbf_kernel(Xhat, X)
-            elif self.model.sem_type in ('mlp', 'sachs'):
+            if self.model.sem_type in ('mlp', 'sachs', 'neuro'):
                 obj = mu * (score + l1_reg) + h_val + 0.01 * rbf_kernel(Xhat, X)
             else:
                 obj = mu * (score + l1_reg) + h_val + 1.5 * rbf_kernel(Xhat, X)
