@@ -73,8 +73,8 @@ def plot(rows, cols, sem_type, graph_type, kind):
 
             if r == 0:
                 axs[r,c].set_title(mst)
-            axs[r,c].set_xticks([1.8, 4.8, 7.8])
-            axs[r,c].set_xticklabels(['0.1', '0.3', '0.5'])
+            axs[r,c].set_xticks([0, 5, 8])
+            axs[r,c].set_xticklabels(['10%', '30%', '50%'])
             axs[r,c].grid(axis='y', linestyle='--')
                  
 
