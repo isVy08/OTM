@@ -33,7 +33,8 @@ names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer',
 def plot(rows, cols, sem_type, graph_type, kind):
     nrows = len(rows)
     ncols = len(cols)
-    fig, axs = plt.subplots(nrows,ncols, figsize=(13,6), sharex=True)
+    fig, axs = plt.subplots(nrows,ncols, figsize=(13, 7), sharex=True)
+    fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
     for r in range(nrows): 
         for c in range(ncols): 
             metric, mst = rows[r], cols[c]
@@ -41,32 +42,48 @@ def plot(rows, cols, sem_type, graph_type, kind):
                 codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]
             else:
                 codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
+
+            w = 0.0
+
             for method, color in colors.items():
-                
-                means = [np.mean(output[code][method][metric]) for code in codes]
-                errs = [np.std(output[code][method][metric]) for code in codes]
+                rate = 100  if metric in ('F1', 'tpr') else 1
+                    
+                # import pdb; pdb.set_trace()
+                means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
+                errs = [np.std(np.array(output[code][method][metric])*rate) for code in codes]
+               
+                barwidth = 0.35
                 if graph_type == "REAL":
                     # errs = [e + (np.random.random(1)[0]* 0.05) for e in errs]
-                    axs[r,c].plot([0.1, 0.3, 0.5], means, c=color, marker='o', label=names[method], linewidth=2.5)
+                    # axs[r,c].plot([0.1, 0.3, 0.5], means, c=color, marker='o', label=names[method], linewidth=2.5)
+                    axs[r,c].bar(np.array([1, 4, 7]) + w , means, color=color, width=barwidth, label=names[method])
+                    
                 else:
-                    axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], linewidth=2.5)
-                axs[r,c].grid(axis='both', linestyle='--', color='grey')
-                if c > 0:
-                    axs[r,c].get_yaxis().set_visible(False)
-                else: 
-                    axs[r,c].set_ylabel(metric.upper())
-                    # if sem_type =='real': axs[r,c].set_yticks([0.01, 0.03, 0.05])
+                    # axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], linewidth=2.5)
+                    axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+                w += barwidth
 
-                if r == 0:
-                    axs[r,c].set_title(mst)
                 
+                # if c > 0:
+                #     axs[r,c].get_yaxis().set_visible(False)
+            if c == 0: 
+                if metric in ('F1', 'tpr'):
+                    metric = f'{metric} (%)'
+                axs[r,c].set_ylabel(metric.upper())
+
+            if r == 0:
+                axs[r,c].set_title(mst)
+            axs[r,c].set_xticks([1.8, 4.8, 7.8])
+            axs[r,c].set_xticklabels(['0.1', '0.3', '0.5'])
+            axs[r,c].grid(axis='y', linestyle='--')
+                 
 
     i = nrows - 1
     if nrows == 3:
-        axs[i,i].legend(bbox_to_anchor=[0.5, -0.4, 0.2, 0.2], ncol=6)
+        axs[i,i].legend(bbox_to_anchor=[0.7, -0.4, 0.2, 0.2], ncol=6)
     else:
         axs[i,i].legend(bbox_to_anchor=[1.8, -0.35, 0.2, 0.2], ncol=6)
-    # plt.tight_layout()
+    
     plt.savefig(f'figures/{sem_type}-{graph_type}-{kind}.png')
 
 
@@ -89,8 +106,8 @@ else:
 
 plot(rows, cols, sem_type, graph_type, 'SL')
 
-# if graph_type != 'REAL':
-#     if 'missdag' in colors: del colors['missdag']
-#     rows = ['MAE', 'RMSE']
-#     cols = ['MCAR', 'MAR', 'MNAR']
-#     plot(rows, cols, sem_type, graph_type, 'MI')
+
+# if 'missdag' in colors: del colors['missdag']
+# rows = ['MAE', 'RMSE']
+# cols = ['MCAR', 'MAR', 'MNAR']
+# plot(rows, cols, sem_type, graph_type, 'MI')
