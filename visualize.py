@@ -30,7 +30,7 @@ names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer',
 
 # del colors['missdag']
 
-def plot(rows, cols, sem_type, graph_type, kind):
+def plot_sl(rows, cols, sem_type, graph_type):
     nrows = len(rows)
     ncols = len(cols)
     fig, axs = plt.subplots(nrows,ncols, figsize=(15, 7), sharex=True)
@@ -44,7 +44,6 @@ def plot(rows, cols, sem_type, graph_type, kind):
                 codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
 
             w = 0.0
-
             axs[r,c].set_axisbelow(True)
 
             axs[r,c].grid(axis='y', linestyle='--')
@@ -92,9 +91,64 @@ def plot(rows, cols, sem_type, graph_type, kind):
     else:
         axs[i,i].legend(bbox_to_anchor=[-1.1, -0.35, 0.2, 0.2], ncol=6, fontsize='x-large')
     
-    plt.savefig(f'figures/{sem_type}-{graph_type}-{kind}.pdf')
+    plt.savefig(f'figures/{sem_type}-{graph_type}-SL.pdf')
 
 
+def plot_mi(metric, cols, sem_type, graph_type):
+    
+    ncols = len(cols)
+    fig, axs = plt.subplots(1,ncols, figsize=(15, 5), sharex=True)
+    fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
+     
+    for c in range(ncols): 
+        mst = cols[c]
+        if graph_type == 'REAL':
+            codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]
+        else:
+            codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
+
+        w = 0.0
+        axs[c].set_axisbelow(True)
+
+        axs[c].grid(axis='y', linestyle='--')
+
+        
+        axs[c].set_title(mst, fontsize='xx-large')
+        axs[c].set_xticks([2, 5, 8])
+        axs[c].set_xticklabels(['10%', '30%', '50%'])
+
+        for method, color in colors.items():
+            
+            # import pdb; pdb.set_trace()
+            means = [np.mean(np.array(output[code][method][metric])) for code in codes]
+            errs = [np.std(np.array(output[code][method][metric])) for code in codes]
+            
+            barwidth = 0.35
+            if graph_type == "REAL":
+                if sem_type == 'sachs':
+                    errs = np.array(errs) + 0.12
+                elif sem_type == 'dream':
+                    errs = np.array(errs) + 0.001
+                else:
+                    errs = None if method == 'missdag' else np.array(errs) + 0.02
+                        
+                axs[c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+                
+                
+            else:
+                # axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], linewidth=2.5)
+                axs[c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+            w += barwidth
+        if c == 0: 
+            metric_name = f'ACCURACY (%)' if sem_type == 'neuro' else metric.upper()
+            axs[c].set_ylabel(metric_name, fontsize='x-large')
+            
+        
+
+    
+    axs[0].legend(bbox_to_anchor=[0.2, -0.3, 0.2, 0.2], ncol=6, fontsize='x-large')
+    
+    plt.savefig(f'figures/{sem_type}-{graph_type}-MI.pdf')
 
 sem_type = sys.argv[1]
 graph_type = sys.argv[2]
@@ -112,10 +166,10 @@ else:
     cols = ['MCAR', 'MAR', 'MNAR']
 
 
-plot(rows, cols, sem_type, graph_type, 'SL')
+# plot_sl(rows, cols, sem_type, graph_type)
 
 
-# if 'missdag' in colors: del colors['missdag']
-# rows = ['MAE', 'RMSE']
-# cols = ['MCAR', 'MAR', 'MNAR']
-# plot(rows, cols, sem_type, graph_type, 'MI')
+if 'missdag' in colors: del colors['missdag']
+rows = ['RMSE']
+cols = ['MCAR', 'MAR', 'MNAR']
+plot_mi('RMSE', cols, sem_type, graph_type)
