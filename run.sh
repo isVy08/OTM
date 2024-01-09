@@ -21,7 +21,7 @@ do
     done
 done
 
-# 
+
 python visualize.py dream REAL
 python visualize.py neuro REAL
 python visualize.py sachs REAL

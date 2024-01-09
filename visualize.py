@@ -40,6 +40,8 @@ def plot_sl(rows, cols, sem_type, graph_type):
             metric, mst = rows[r], cols[c]
             if graph_type == 'REAL':
                 codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]
+            elif sem_type == 'linear':
+                codes = [f'Linear-{graph_type}{i}' for i in miss_types[mst]]
             else:
                 codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
 
@@ -104,6 +106,8 @@ def plot_mi(metric, cols, sem_type, graph_type):
         mst = cols[c]
         if graph_type == 'REAL':
             codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]
+        elif sem_type == 'linear':
+            codes = [f'Linear-{graph_type}{i}' for i in miss_types[mst]]
         else:
             codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
 
@@ -159,14 +163,13 @@ if sem_type == 'gp-add': sem_type = 'gpadd'
 # Visualization of causal discovery
 if graph_type == 'REAL':
 
-    rows = ['F1', 'tpr']
+    rows = ['shd', 'F1']
     cols = ['MCAR', 'MAR', 'MNAR']
 else:
-    rows = ['shd', 'F1', 'tpr']
+    rows = ['shd', 'F1']
     cols = ['MCAR', 'MAR', 'MNAR']
 
-
-# plot_sl(rows, cols, sem_type, graph_type)
+plot_sl(rows, cols, sem_type, graph_type)
 
 
 if 'missdag' in colors: del colors['missdag']

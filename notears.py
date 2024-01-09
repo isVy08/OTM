@@ -1,12 +1,7 @@
 import torch, math
 import torch.nn as nn
 import numpy as np
-import sys
-from utils.eval import set_seed
 from dag_methods.notears_mlp_mcem.utils import LocallyConnected, LBFGSBScipy, trace_expm
-
-
-set_seed(123)
 
 
 class NotearsMLP(nn.Module):
@@ -134,11 +129,11 @@ class NotearsSobolev(nn.Module):
         fc1_weight = self.fc1_pos.weight - self.fc1_neg.weight  # [j, ik]
         fc1_weight = fc1_weight.view(self.d, self.d, self.k)  # [j, i, k]
         A = torch.sum(fc1_weight * fc1_weight, dim=2).t()  # [i, j]
-        # h = trace_expm(A) - self.d  # (Zheng et al. 2018)
+        h = trace_expm(A) - d  # (Zheng et al. 2018)
         # A different formulation, slightly faster at the cost of numerical stability
-        M = torch.eye(self.d) + A / self.d  # (Yu et al. 2019)
-        E = torch.matrix_power(M, self.d - 1)
-        h = (E.t() * M).sum() - self.d
+        # M = torch.eye(self.d) + A / self.d  # (Yu et al. 2019)
+        # E = torch.matrix_power(M, self.d - 1)
+        # h = (E.t() * M).sum() - self.d
         return h
 
     def l2_reg(self):
@@ -202,8 +197,7 @@ def notears_nonlinear(model: nn.Module,
                       rho_max: float = 1e+16,
                       w_threshold: float = 0.3):
     rho, alpha, h = 1.0, 0.0, np.inf
-    for i in range(max_iter):
-        print(f'Iteration {i} ...')
+    for _ in range(max_iter):
         rho, alpha, h = dual_ascent_step(model, X, lambda1, lambda2,
                                          rho, alpha, h, rho_max)
         if h <= h_tol or rho >= rho_max:
@@ -213,34 +207,23 @@ def notears_nonlinear(model: nn.Module,
     return W_est
 
 
-if __name__ == '__main__':
-    
-    from config import get_config
-    from synthetic import SyntheticDataset
-    
-    config_id = int(sys.argv[1])
-    config = get_config(config_id)
-    
-    print('Loading data ...')
-    dataset = SyntheticDataset(n = config['num_obs'], d = config['num_vars'], 
-                            config_id = config_id,
-                            graph_type = config['graph_type'], 
-                            degree = config['degree'], 
-                            noise_type = config['noise_type'],
-                            miss_type = config['miss_type'], 
-                            miss_percent = config['miss_percent'], 
-                            sem_type = config['sem_type'],
-                            equal_variances = config['ev']
-                           )
+def main():
+    torch.set_default_dtype(torch.double)
+    np.set_printoptions(precision=3)
 
-    X = dataset.X_true
-    n, d = X.shape
+    import notears.utils as ut
+    ut.set_random_seed(123)
+
+    n, d, s0, graph_type, sem_type = 200, 5, 9, 'ER', 'mim'
+    B_true = ut.simulate_dag(d, s0, graph_type)
+    np.savetxt('W_true.csv', B_true, delimiter=',')
+
+    X = ut.simulate_nonlinear_sem(B_true, n, sem_type)
+    np.savetxt('X.csv', X, delimiter=',')
+
     model = NotearsMLP(dims=[d, 10, 1], bias=True)
-    B_out = notears_nonlinear(model, X, lambda1=0.01, lambda2=0.01, max_iter=2)
-    np.save(f'output/{config_id}_notears.npy', B_out)
-
-    from utils.eval import MetricsDAG, is_dag
-    print('Is DAG?', is_dag(B_out))
-    raw_result = MetricsDAG(B_out, dataset.B_bin)
-    raw_result.display()
-
+    W_est = notears_nonlinear(model, X, lambda1=0.01, lambda2=0.01)
+    assert ut.is_dag(W_est)
+    np.savetxt('W_est.csv', W_est, delimiter=',')
+    acc = ut.count_accuracy(B_true, W_est != 0)
+    print(acc)

@@ -169,10 +169,18 @@ sem_type = sys.argv[1]
 if sem_type in ('neuro', 'sachs') or 'dream' in sem_type:
     version = 'real'
     output = extract_baseline({}, sem_type, version)
-    output = extract_otm_missdag(output, 'otm', sem_type, 'real')
+    output = extract_otm_missdag(output, 'otm', sem_type, version)
     output = extract_otm_missdag(output, 'missdag', sem_type, version)
     # output = extract_otm_missdag(output, 'complete', sem_type, version)
     # output_to_df(output, sem_type)
+elif sem_type == 'linear':
+    version = 'v1'
+    output = extract_baseline({}, sem_type, version)
+    output = extract_otm_missdag(output, 'otm', sem_type, version)
+    output = extract_otm_missdag(output, 'missdag', sem_type, version)
+    # output = extract_otm_missdag(output, 'complete', sem_type, version)
+    # output_to_df(output, sem_type)
+
 else:
     # sem_type = 'mim'
     output = collect('otm', sem_type)
