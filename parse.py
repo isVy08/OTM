@@ -92,7 +92,6 @@ def extract_otm_missdag(output, method, sem_type, version):
 def collect(method, sem_type): 
 
     seeds = (1,2,3,4,5)
-    # seeds = (1,1)
 
     for i in seeds:
         version = f'v{i}'
@@ -105,7 +104,6 @@ def collect(method, sem_type):
             if method == 'baseline':
                 temp = extract_baseline({}, sem_type, version)
             else:
-                if method == 'missdag': version = 'v1'
                 temp = extract_otm_missdag({}, method, sem_type, version)
             # levels: code > method > metric = value
             for code, l1_val in temp.items():
