@@ -10,8 +10,6 @@ from utils.io import load_pickle
 miss_types = {'MCAR': [1,2,3], 'MAR': [4,5,6], 'MNAR': [7,8,9]}
 miss_percents = {0.1: [1,4,7], 0.3: [2,5,8], 0.5: [3,6,9]}
 
-
-
 def extract_baseline(output, graph_path, imp_path, sem_type):
 
     graph = load_txt(f'output/{graph_path}.txt')
@@ -171,7 +169,6 @@ def plot_linear():
     axs[1,1].legend(bbox_to_anchor=[0.5, -0.30, 0.2, 0.2], ncol=3, fontsize='x-large')
     fig.savefig(f'figures/linear.pdf', bbox_inches='tight')
 
-
 def plot_runtime():
     data = load_txt(f'output/runtime.txt')
     xs = []
@@ -185,10 +182,10 @@ def plot_runtime():
             method, _, code = code.split('-')
             
             if method == 'OTM':
-                otm.append(float(time) * 23000)
+                otm.append((float(time) * 23000 / 3600))
                 xs.append(config[code[-2:]])
             elif method == 'MissDAG':
-                missdag.append(float(time) * 10)
+                missdag.append((float(time) * 10)/3600)
             # else:
             #     dagma.append(float(time) * 23000)
     plt.plot(xs, otm, color='red', label='OTM', marker='o', linewidth=2.0)
@@ -197,8 +194,46 @@ def plot_runtime():
     plt.xticks(ticks=xs, labels=xs)
     plt.legend()
     plt.xlabel('Number of nodes')
-    plt.ylabel('Training time (seconds)')
+    plt.ylabel('Training time (hours)')
     plt.savefig('figures/runtime.pdf')
 
-plot_linear()
+
+def plot_quali():
+    
+
+    # mae, rmse, ot_xy, ot_xx, ot_yx, graph_metrics 
+    output = load_pickle('output/quanti_behavior.pkl')
+    metrics = ('RMSE', r'$W_2(\widehat{\mathbf{X}}, \mathbf{X})$', 'SHD', 'F1 (%)')
+    pads = [0.3, 20, 1, 1]
+
+
+    fig, axs = plt.subplots(2,2, figsize=(12, 7), sharex=True)
+    fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=2.0)
+    i = 0
+    xs = range(len(output))
+    for r in range(2):
+        for c in range(2):
+            if i == 0:
+                data = [item[1] for item in output]
+            elif i == 1:
+                data = [item[3] for item in output]
+            elif i == 2: 
+                data = [item[-1]['shd'] for item in output]
+            else:
+                data = [item[-1]['F1'] * 100 for item in output]
+            
+            
+            axs[r,c].plot(xs, data, marker='o', linewidth=2.0, color="red")
+            axs[r,c].set_title(metrics[i], fontsize='xx-large')
+            axs[r,c].set_axisbelow(True)
+            axs[r,c].grid(axis='y', linestyle='--')
+            axs[r,c].fill_between(xs, np.array(data)+pads[i], np.array(data)-pads[i], facecolor='lightcoral', alpha=0.5)
+            i += 1
+    plt.savefig('figures/test.png')
+
+# plot_runtime()
 # plot_intro()
+plot_quali()
+
+
+# plot ablation study
