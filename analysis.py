@@ -201,7 +201,7 @@ def plot_quali():
     # mae, rmse, ot_xy, ot_xx, ot_yx, graph_metrics 
     output = load_pickle('output/quanti_behavior.pkl')
     metrics = ('RMSE', r'$W_2(\widehat{\mathbf{X}}, \mathbf{X})$', 'SHD', 'F1 (%)')
-    pads = [0.3, 20, 8, 8]
+    pads = [0.6, 20, 7, 7]
 
     fig, axs = plt.subplots(2,2, figsize=(9, 6), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=2.0)
