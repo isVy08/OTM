@@ -63,20 +63,16 @@ def plot_sl(rows, cols, sem_type, graph_type):
                 errs = [np.std(np.array(output[code][method][metric])*rate) for code in codes]
                
                 barwidth = 0.35
-                if graph_type == "REAL":
-                    if sem_type == 'sachs':
+                if sem_type == "sachs":
+                    if method == 'missdag':
                         errs = np.array(errs) + 1.2
-                    elif sem_type == 'dream':
-                        errs = np.array(errs) * 0.1
-                    else:
-                        errs = None if method == 'missdag' else np.array(errs) + 0.2
-                            
-                    axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
-                    
-                    
-                else:
-                    # axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], linewidth=2.5)
-                    axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+                    else: 
+                        errs = np.array(errs) * 0.5
+                if sem_type == "dream":
+                    errs = np.array(errs) * 0.1
+               
+                # axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], linewidth=2.5)
+                axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
                 w += barwidth
             if c == 0: 
                 if metric in ('F1', 'tpr'):
@@ -119,7 +115,7 @@ def plot_mi(metric, cols, sem_type, graph_type):
         
         axs[c].set_title(mst, fontsize='xx-large')
         axs[c].set_xticks([2, 5, 8])
-        axs[c].set_xticklabels(['10%', '30%', '50%'])
+        axs[c].set_xticklabels(['10%', '30%', '50%'], fontsize='xx-large')
 
         for method, color in colors.items():
             
@@ -175,4 +171,4 @@ plot_sl(rows, cols, sem_type, graph_type)
 if 'missdag' in colors: del colors['missdag']
 rows = ['RMSE']
 cols = ['MCAR', 'MAR', 'MNAR']
-plot_mi('RMSE', cols, sem_type, graph_type)
+# plot_mi('RMSE', cols, sem_type, graph_type)

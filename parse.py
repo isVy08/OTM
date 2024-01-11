@@ -3,10 +3,7 @@ from utils.io import load_txt
 import numpy as np
 import sys
 from utils.io import write_pickle, load_pickle
-'''
-Columns: Code, OTM, Mean, SK, RR, Iterative, MissDag
-Rows: Fscore, tpr, SDH
-'''
+
 
 def extract_baseline(output, sem_type, version):
 
@@ -163,34 +160,28 @@ def output_to_df(output, sem_type):
 
     df.to_csv(f'output/{sem_type}.csv', index = False)
 
+if __name__ == "__main__":
 
 # Combine output
-sem_type = sys.argv[1]
-if sem_type in ('neuro', 'sachs') or 'dream' in sem_type:
-    version = 'real'
-    output = extract_baseline({}, sem_type, version)
-    output = extract_otm_missdag(output, 'otm', sem_type, version)
-    output = extract_otm_missdag(output, 'missdag', sem_type, version)
-    # output = extract_otm_missdag(output, 'complete', sem_type, version)
-    # output_to_df(output, sem_type)
-elif sem_type == 'linear':
-    version = 'v1'
-    output = extract_baseline({}, sem_type, version)
-    output = extract_otm_missdag(output, 'otm', sem_type, version)
-    output = extract_otm_missdag(output, 'missdag', sem_type, version)
-    # output = extract_otm_missdag(output, 'complete', sem_type, version)
-    # output_to_df(output, sem_type)
+    sem_type = sys.argv[1]
+    if 'dream' in sem_type:
+        version = 'real'
+        output = extract_baseline({}, sem_type, version)
+        output = extract_otm_missdag(output, 'otm', sem_type, version)
+        output = extract_otm_missdag(output, 'missdag', sem_type, version)
+        # output = extract_otm_missdag(output, 'complete', sem_type, version)
+        # output_to_df(output, sem_type)
+    else:
+        # sem_type = 'mim'
+        output = collect('otm', sem_type)
+        output_baseline = collect('baseline', sem_type)
+        output_missdag = collect('missdag', sem_type)
 
-else:
-    # sem_type = 'mim'
-    output = collect('otm', sem_type)
-    output_baseline = collect('baseline', sem_type)
-    output_missdag = collect('missdag', sem_type)
 
-    for code in output:
-        for method in output_baseline[code]:
-            output[code][method] = output_baseline[code][method]
-        for method in output_missdag[code]:
-            output[code][method] = output_missdag[code][method]
+        for code in output:
+            for method in output_baseline[code]:
+                output[code][method] = output_baseline[code][method]
+            for method in output_missdag[code]:
+                output[code][method] = output_missdag[code][method]
 
-write_pickle(output, f'output/{sem_type}.pickle')
+    write_pickle(output, f'output/{sem_type}.pickle')
