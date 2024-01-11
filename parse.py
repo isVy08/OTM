@@ -89,9 +89,7 @@ def extract_otm_missdag(output, method, sem_type, version):
                 output[code][method]['RMSE'] = [0]
     return output
 
-def collect(method, sem_type): 
-
-    seeds = (1,2,3,4,5)
+def collect(method, sem_type, seeds=(1,2,3,4,5)): 
 
     for i in seeds:
         version = f'v{i}'
@@ -169,6 +167,18 @@ if __name__ == "__main__":
         output = extract_otm_missdag(output, 'missdag', sem_type, version)
         # output = extract_otm_missdag(output, 'complete', sem_type, version)
         # output_to_df(output, sem_type)
+    elif sem_type == 'linear':
+        output = collect('otm', sem_type, (1,2,3))
+        output_baseline = collect('baseline', sem_type, (1,2,3))
+        output_missdag = collect('missdag', sem_type, (1,2,3))
+
+
+        for code in output:
+            for method in output_baseline[code]:
+                output[code][method] = output_baseline[code][method]
+            for method in output_missdag[code]:
+                output[code][method] = output_missdag[code][method]
+    
     else:
         # sem_type = 'mim'
         output = collect('otm', sem_type)
