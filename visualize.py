@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-from utils.io import load_pickle
+from utils.io import load_pickle, load_txt
 import sys
 
 '''
@@ -90,26 +90,56 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
     plt.savefig(f'figures/{sem_type}-{graph_type}-{kind}.pdf')
 
 
+def plot_runtime():
+    data = load_txt(f'output/runtime.txt')
+    xs = []
+    otm = []
+    missdag = []
+    # dagma = []
+    config = {'27':20, '28':30, '29':40, '30':50, '31':100, '32':200}
+    for line in data:
+        if 'MLP-ER' in line:
+            code, time = line.split(': ')
+            method, _, code = code.split('-')
+            
+            if method == 'OTM':
+                otm.append(float(time) * 23000)
+                xs.append(config[code[-2:]])
+            elif method == 'MissDAG':
+                missdag.append(float(time) * 10)
+            # else:
+            #     dagma.append(float(time) * 23000)
+    plt.plot(xs, otm, color='red', label='OTM', marker='o', linewidth=2.0)
+    plt.plot(xs, missdag, color='blue', label='MissDAG', marker='o', linewidth=2.0)
+    # plt.plot(xs, dagma, color='green', label='DAGMA', marker='o', linewidth=2.0)
+    plt.xticks(ticks=xs, labels=xs)
+    plt.legend()
+    plt.xlabel('Number of nodes')
+    plt.ylabel('Training time (seconds)')
+    plt.savefig('figures/runtime.pdf')
 
 sem_type = sys.argv[1]
-graph_type = sys.argv[2]
 
-output = load_pickle(f'output/{sem_type}.pickle')
-if sem_type == 'gp-add': sem_type = 'gpadd'
 
-# Visualization of causal discovery
-if graph_type == 'REAL':
-
-    rows = ['shd', 'F1']
-    cols = ['MCAR', 'MAR', 'MNAR']
+if sem_type == 'runtime':
+    plot_runtime() 
 else:
-    rows = ['shd', 'F1']
-    cols = ['MCAR', 'MAR', 'MNAR']
+    graph_type = sys.argv[2]
+    output = load_pickle(f'output/{sem_type}.pickle')
+    if sem_type == 'gp-add': sem_type = 'gpadd'
 
-plot_main(rows, cols, sem_type, graph_type, 'SL')
+    # Visualization of causal discovery
+    if graph_type == 'REAL':
 
+        rows = ['shd', 'F1']
+        cols = ['MCAR', 'MAR', 'MNAR']
+    else:
+        rows = ['shd', 'F1']
+        cols = ['MCAR', 'MAR', 'MNAR']
 
-# if 'missdag' in colors: del colors['missdag']
-# rows = ['MAE', 'RMSE']
-# cols = ['MCAR', 'MAR', 'MNAR']
-# plot_main(rows, cols, sem_type, graph_type, 'MI')
+    plot_main(rows, cols, sem_type, graph_type, 'SL')
+
+    # if 'missdag' in colors: del colors['missdag']
+    # rows = ['MAE', 'RMSE']
+    # cols = ['MCAR', 'MAR', 'MNAR']
+    # plot_main(rows, cols, sem_type, graph_type, 'MI')

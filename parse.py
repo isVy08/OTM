@@ -2,7 +2,7 @@ import pandas as pd
 from utils.io import load_txt
 import numpy as np
 import sys
-from utils.io import write_pickle, load_pickle
+from utils.io import write_pickle
 
 
 def extract_baseline(output, sem_type, version):
