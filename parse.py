@@ -5,9 +5,9 @@ import sys
 from utils.io import write_pickle
 
 
-def extract_baseline(output, sem_type, version):
+def extract_baseline(output, sem_type, version, root='output'):
 
-    graph = load_txt(f'output/{version}/baseline_{sem_type}.txt')
+    graph = load_txt(f'{root}/{version}/baseline_{sem_type}.txt')
     
     for line in graph:
         if 'ER' in line or 'SF' in line or 'REAL' in line: 
@@ -26,7 +26,7 @@ def extract_baseline(output, sem_type, version):
             m = line.split(' : ')[0]
             output[code][method][m] = [float(v)]
 
-    imputation = load_txt(f'output/{version}/baseline_{sem_type}_imputation.txt')
+    imputation = load_txt(f'{root}/{version}/baseline_{sem_type}_imputation.txt')
    
     sem_type = 'Linear' if sem_type == 'linear' else sem_type.upper()
    
@@ -45,8 +45,8 @@ def extract_baseline(output, sem_type, version):
             output[code][method]['RMSE'] = [np.round(float(rmse), 4)]
     return output
 
-def extract_otm_missdag(output, method, sem_type, version):  
-    graph = load_txt(f'output/{version}/{method}_{sem_type}.txt')
+def extract_otm_missdag(output, method, sem_type, version, root='output'):  
+    graph = load_txt(f'{root}/{version}/{method}_{sem_type}.txt')
 
 
     for line in graph:
@@ -66,7 +66,7 @@ def extract_otm_missdag(output, method, sem_type, version):
             output[code][method][m] = [float(value)]
     
     if method == 'otm':
-        imputation = load_txt(f'output/{version}/otm_{sem_type}_imputation.txt')
+        imputation = load_txt(f'{root}/{version}/otm_{sem_type}_imputation.txt')
         sem_type = 'Linear' if sem_type == 'linear' else sem_type.upper()
         for line in imputation:
             if ('ER' in line or 'SF' in line or 'REAL' in line) and sem_type in line: 
@@ -89,20 +89,20 @@ def extract_otm_missdag(output, method, sem_type, version):
                 output[code][method]['RMSE'] = [0]
     return output
 
-def collect(method, sem_type, seeds=(1,2,3,4,5)): 
+def collect(method, sem_type, seeds=(1,2,3,4,5), root='output'): 
 
     for i in seeds:
         version = f'v{i}'
         if i == 1:
             if method == 'baseline':
-                output = extract_baseline({}, sem_type, version)
+                output = extract_baseline({}, sem_type, version, root=root)
             else:
-                output = extract_otm_missdag({}, method, sem_type, version)
+                output = extract_otm_missdag({}, method, sem_type, version, root=root)
         else: 
             if method == 'baseline':
-                temp = extract_baseline({}, sem_type, version)
+                temp = extract_baseline({}, sem_type, version, root=root)
             else:
-                temp = extract_otm_missdag({}, method, sem_type, version)
+                temp = extract_otm_missdag({}, method, sem_type, version, root=root)
             # levels: code > method > metric = value
             for code, l1_val in temp.items():
                 for mth, l2_val in l1_val.items():  
@@ -175,10 +175,22 @@ if __name__ == "__main__":
 
         for code in output:
             for method in output_baseline[code]:
-                output[code][method] = output_baseline[code][method]
+                output[code][method] = output_baseline[code][method]    
             for method in output_missdag[code]:
                 output[code][method] = output_missdag[code][method]
     
+    elif sem_type == 'ablation':
+        output = collect('otm', 'mlp', seeds=(1,2), root='output/ablation')
+        output_baseline = collect('baseline', 'mlp', seeds=(1,2), root='output/ablation')
+        output_missdag = collect('missdag', 'mlp', seeds=(1,2), root='output/ablation')
+
+
+        for code in output:
+            for method in output_baseline[code]:
+                output[code][method] = output_baseline[code][method]
+            if code in output_missdag:
+                for method in output_missdag[code]:
+                    output[code][method] = output_missdag[code][method]
     else:
         # sem_type = 'mim'
         output = collect('otm', sem_type)

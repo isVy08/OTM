@@ -50,8 +50,6 @@ def extract_baseline(output, graph_path, imp_path, sem_type):
             output[code][method]['RMSE'] = [np.round(float(rmse), 4)]
     return output
 
-
-
 def plot_intro():
     colors = { "mean": "green", "sk": "orange", "iterative": "purple"}
     names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer'}
@@ -197,7 +195,6 @@ def plot_runtime():
     plt.ylabel('Training time (hours)')
     plt.savefig('figures/runtime.pdf')
 
-
 def plot_quali():
     
 
@@ -206,8 +203,7 @@ def plot_quali():
     metrics = ('RMSE', r'$W_2(\widehat{\mathbf{X}}, \mathbf{X})$', 'SHD', 'F1 (%)')
     pads = [0.3, 20, 1, 1]
 
-
-    fig, axs = plt.subplots(2,2, figsize=(12, 7), sharex=True)
+    fig, axs = plt.subplots(2,2, figsize=(9, 6), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=2.0)
     i = 0
     xs = range(len(output))
@@ -216,7 +212,7 @@ def plot_quali():
             if i == 0:
                 data = [item[1] for item in output]
             elif i == 1:
-                data = [item[3] for item in output]
+                data = [item[4] for item in output]
             elif i == 2: 
                 data = [item[-1]['shd'] for item in output]
             else:
@@ -229,11 +225,77 @@ def plot_quali():
             axs[r,c].grid(axis='y', linestyle='--')
             axs[r,c].fill_between(xs, np.array(data)+pads[i], np.array(data)-pads[i], facecolor='lightcoral', alpha=0.5)
             i += 1
-    plt.savefig('figures/test.png')
+    # plt.savefig('figures/test.png')
+    plt.savefig('figures/convergence.pdf')
 
-# plot_runtime()
-# plot_intro()
-plot_quali()
+def plot_ablation():
+    # MCAR, 0.1
+    output = load_pickle(f'output/ablation.pickle')
+    colors = {'otm': "red", 
+          'missdag': "blue", 
+          "mean": "green",
+          "sk": "grey",
+          "lin-rr": "orange", 
+          "iterative": "purple"}
+
+    names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
+         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
+
+
+    fig, axs = plt.subplots(2,3, figsize=(15, 7))
+    fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
+
+    barwidth = 0.35
+    
+    for c in range(3): 
+        if c == 0:
+            codes = [f'MLP-ER{i}' for i in (21, 22, 23)]
+            lab = 'Noise type'
+            ticks = ['Exponential', 'Laplace', 'Gumbel']
+        elif c == 1:
+            codes = [f'MLP-ER{i}' for i in (24, 25, 26)]
+            lab = 'Expected degree'
+            ticks = ['4', '6', '8']
+        else:
+            codes = [f'MLP-ER{i}' for i in (27, 28, 29)]
+            lab = 'Number of nodes'
+            ticks = ['20', '30', '40'] # [to be updated]
+        for r in range(2): 
+                        
+
+            w = 0.0
+            axs[r,c].set_axisbelow(True)
+            axs[r,c].grid(axis='y', linestyle='--')
+            axs[r,c].set_xticks([1.5, 4.5, 7.5])
+            axs[r,c].set_xticklabels(ticks)
+            if r == 0:
+                axs[r,c].set_title(lab, fontsize='xx-large')
+                        
+
+            metric = 'shd' if r == 0 else 'F1'
+            for method, color in colors.items():
+                rate = 100  if metric == 'F1' else 1
+                means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
+                errs = [np.std(np.array(output[code][method][metric])*rate) * 0.2 for code in codes]
+               
+                axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+                w += barwidth
+
+            if c == 0: 
+                if metric in ('F1', 'tpr'):
+                    metric_name = f'{metric} (%)'
+                else:
+                    metric_name = metric.upper()
+                axs[r,c].set_ylabel(metric_name, fontsize='x-large')
+                
+    
+    axs[1,1].legend(bbox_to_anchor=[2.0, -0.3, 0.2, 0.2], ncol=6, fontsize='x-large')
+    fig.savefig(f'figures/test.png')
 
 
 # plot ablation study
+
+# plot_runtime()
+# plot_intro()
+# plot_quali()
+plot_ablation()
