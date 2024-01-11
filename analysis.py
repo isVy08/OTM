@@ -201,7 +201,7 @@ def plot_quali():
     # mae, rmse, ot_xy, ot_xx, ot_yx, graph_metrics 
     output = load_pickle('output/quanti_behavior.pkl')
     metrics = ('RMSE', r'$W_2(\widehat{\mathbf{X}}, \mathbf{X})$', 'SHD', 'F1 (%)')
-    pads = [0.3, 20, 1, 1]
+    pads = [0.3, 20, 8, 8]
 
     fig, axs = plt.subplots(2,2, figsize=(9, 6), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=2.0)
@@ -224,6 +224,13 @@ def plot_quali():
             axs[r,c].set_axisbelow(True)
             axs[r,c].grid(axis='y', linestyle='--')
             axs[r,c].fill_between(xs, np.array(data)+pads[i], np.array(data)-pads[i], facecolor='lightcoral', alpha=0.5)
+            
+            # ticks = list(range(0, 23000, 100))
+            if r == 1:
+                axs[r,c].set_xlabel(r'$t \times 10^2$' + ' (step)')
+            
+            # axs[r,c].set_xticklabels(ticks)
+
             i += 1
     # plt.savefig('figures/test.png')
     plt.savefig('figures/convergence.pdf')
@@ -290,12 +297,12 @@ def plot_ablation():
                 
     
     axs[1,1].legend(bbox_to_anchor=[2.0, -0.3, 0.2, 0.2], ncol=6, fontsize='x-large')
-    fig.savefig(f'figures/test.png')
+    fig.savefig(f'figures/ablation.pdf')
 
 
 # plot ablation study
 
 # plot_runtime()
 # plot_intro()
-# plot_quali()
-plot_ablation()
+plot_quali()
+# plot_ablation()
