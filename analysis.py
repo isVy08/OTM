@@ -10,6 +10,17 @@ from utils.io import load_pickle
 miss_types = {'MCAR': [1,2,3], 'MAR': [4,5,6], 'MNAR': [7,8,9]}
 miss_percents = {0.1: [1,4,7], 0.3: [2,5,8], 0.5: [3,6,9]}
 
+colors = {'otm': "red", 
+          'missdag': "blue", 
+          "mean": "green",
+          "sk": "grey",
+          "lin-rr": "orange", 
+          "iterative": "purple"}
+
+names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
+         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
+
+
 def extract_baseline(output, graph_path, imp_path, sem_type):
 
     graph = load_txt(f'output/{graph_path}.txt')
@@ -51,8 +62,8 @@ def extract_baseline(output, graph_path, imp_path, sem_type):
     return output
 
 def plot_intro():
-    colors = { "mean": "green", "sk": "orange", "iterative": "purple"}
-    names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer'}
+    local_colors = { "mean": "green", "sk": "orange", "iterative": "purple"}
+    local_names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer'}
 
     mlp_output = extract_baseline({}, 'baseline_abs', 'baseline_abs_imputation', 'mlp')
     linear_output = extract_baseline({}, 'v1/baseline_linear', 'v1/baseline_linear_imputation', 'linear')
@@ -85,7 +96,7 @@ def plot_intro():
             axs[r,c].set_xticks([1.2, 4.2, 7.2])
             axs[r,c].set_xticklabels(['10%', '30%', '50%'])
 
-            for method, color in colors.items():
+            for method, color in local_colors.items():
                 rate = 100  if metric == 'F1' else 1
                 means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
                
@@ -98,7 +109,7 @@ def plot_intro():
                 if sem_type == "dream":
                     errs = np.array(errs) * 0.1
                
-                axs[r,c].bar(np.array([1, 4, 7]) + w , means, color=color, width=barwidth, label=names[method])
+                axs[r,c].bar(np.array([1, 4, 7]) + w , means, color=color, width=barwidth, label=local_names[method])
                 w += barwidth
 
             if c == 0: 
@@ -115,17 +126,7 @@ def plot_intro():
 
 def plot_linear():
     output = load_pickle(f'output/linear.pickle')
-    colors = {'otm': "red", 
-          'missdag': "blue", 
-          "mean": "green",
-          "sk": "grey",
-          "lin-rr": "orange", 
-          "iterative": "purple"}
-
-    names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
-         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
-
-
+   
     fig, axs = plt.subplots(2,2, figsize=(12, 7), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
@@ -167,33 +168,93 @@ def plot_linear():
     axs[1,1].legend(bbox_to_anchor=[0.5, -0.30, 0.2, 0.2], ncol=3, fontsize='x-large')
     fig.savefig(f'figures/linear.pdf', bbox_inches='tight')
 
-def plot_runtime():
+def extract_runtime(config):
     data = load_txt(f'output/runtime.txt')
-    xs = []
-    otm = []
-    missdag = []
-    # dagma = []
-    config = {'27':20, '28':30, '29':40, '30':50, '31':100, '32':200}
+    output = {name: [] for name in names}
+    output['DAGMA'] = {}
+    # config = {27:20, 28:30, 29:40} #, 30:50, 31:100, 32:200}
+    
     for line in data:
-        if 'MLP-ER' in line:
-            code, time = line.split(': ')
-            method, _, code = code.split('-')
+
+        line = line.replace('-MLP', '/MLP')
+        line = line.replace('-ER', '/ER')
+       
+        code, time = line.split(': ')
+        method, _, code = code.split('/')
+        config_id = int(code[-2:])
+        if config_id in config:
+            if method == 'otm':
+                output['otm'].append((float(time) * 23000) / 3600)
+            elif method == 'missdag':
+                output['missdag'].append((float(time) * 10) / 3600)
+            elif method == 'DAGMA':
+                output['DAGMA'][config_id] = (float(time) * 230000)
+
+    for line in data: 
+        line = line.replace('-MLP', '/MLP')
+        line = line.replace('-ER', '/ER')
+        code, time = line.split(': ')
+        method, _, code = code.split('/')
+        config_id = int(code[-2:])
+        if config_id in config:
+            if method not in ('otm', 'missdag', 'DAGMA'):
+                time = (output['DAGMA'][config_id] + float(time)) / 3600
+                output[method].append(time)
+    
+    return output
+
+def plot_scalability():
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    fig.tight_layout(pad=4.5, w_pad=1.0, h_pad=0.8)
+    config = {27:20, 28:30, 29:40} #, 30:50, 31:100, 32:200}
+    runtime = extract_runtime(config)
+    ablation = load_pickle('output/ablation.pickle')
+
+    xs = list(config.values())
+    for method in colors: 
+        axs[0].plot(xs, runtime[method], color=colors[method], marker='o', linewidth=2.0, label=names[method])
+        # plt.fill_between(xs, np.array(output[method])+0.5, np.array(output[method])-0.5, facecolor=colors[method], alpha=0.5)
+
+        axs[0].set_xticks(xs) 
+        axs[0].set_xticklabels(xs)
+        
+        axs[0].set_title('Training time (hours)')
+    
+        axs[0].set_xlabel('Number of nodes')
+
+    for c in (1,2):
+        barwidth = 0.35
+        codes = [f'MLP-ER{i}' for i in config]
+        axs[c].set_xlabel('Number of nodes')
+
+        w = 0.0
+        axs[c].set_axisbelow(True)
+        axs[c].grid(axis='y', linestyle='--')
+        axs[c].set_xticks([1.5, 4.5, 7.5])
+        axs[c].set_xticklabels(xs)
+
+        if c == 1:
+            metric = 'shd'
+            metric_name ='SHD'
+        else:
+            metric = 'F1'
+            metric_name ='F1 (%)'
+        metric = 'shd' if c == 1 else 'F1'
+        for method, color in colors.items():
+            rate = 100  if metric == 'F1' else 1
+            means = [np.mean(np.array(ablation[code][method][metric])*rate) for code in codes]
+            errs = [np.std(np.array(ablation[code][method][metric])*rate) * 0.8 for code in codes]
             
-            if method == 'OTM':
-                otm.append((float(time) * 23000 / 3600))
-                xs.append(config[code[-2:]])
-            elif method == 'MissDAG':
-                missdag.append((float(time) * 10)/3600)
-            # else:
-            #     dagma.append(float(time) * 23000)
-    plt.plot(xs, otm, color='red', label='OTM', marker='o', linewidth=2.0)
-    plt.plot(xs, missdag, color='blue', label='MissDAG', marker='o', linewidth=2.0)
-    # plt.plot(xs, dagma, color='green', label='DAGMA', marker='o', linewidth=2.0)
-    plt.xticks(ticks=xs, labels=xs)
-    plt.legend()
-    plt.xlabel('Number of nodes')
-    plt.ylabel('Training time (hours)')
-    plt.savefig('figures/runtime.pdf')
+            axs[c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+            w += barwidth
+
+        axs[c].set_title(metric_name, fontsize='x-large')
+            
+    
+    axs[1].legend(bbox_to_anchor=[-1.15, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
+    fig.savefig(f'figures/scalability.pdf')
+    # fig.savefig('figures/test.png')
+
 
 def plot_quali():
     
@@ -240,17 +301,7 @@ def plot_ablation():
     output = load_pickle(f'output/ablation.pickle')
     mlp_output = load_pickle(f'output/mlp.pickle')
     output['MLP-ER1'] = mlp_output['MLP-ER1']
-    colors = {'otm': "red", 
-          'missdag': "blue", 
-          "mean": "green",
-          "sk": "grey",
-          "lin-rr": "orange", 
-          "iterative": "purple"}
-
-    names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
-         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
-
-
+   
     fig, axs = plt.subplots(2,2, figsize=(15, 7))
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
@@ -299,8 +350,7 @@ def plot_ablation():
 
 
 
-
-# plot_runtime()
+plot_scalability()
 # plot_intro()
 # plot_quali()
-plot_ablation()
+# plot_ablation()
