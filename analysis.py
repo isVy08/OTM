@@ -238,6 +238,8 @@ def plot_quali():
 def plot_ablation():
     # MCAR, 0.1
     output = load_pickle(f'output/ablation.pickle')
+    mlp_output = load_pickle(f'output/mlp.pickle')
+    output['MLP-ER1'] = mlp_output['MLP-ER1']
     colors = {'otm': "red", 
           'missdag': "blue", 
           "mean": "green",
@@ -249,31 +251,27 @@ def plot_ablation():
          'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
 
 
-    fig, axs = plt.subplots(2,3, figsize=(15, 7))
+    fig, axs = plt.subplots(2,2, figsize=(15, 7))
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
     barwidth = 0.35
     
-    for c in range(3): 
+    for c in range(2): 
         if c == 0:
-            codes = [f'MLP-ER{i}' for i in (21, 22, 23)]
+            codes = [f'MLP-ER{i}' for i in (1, 21, 22, 23)]
             lab = 'Noise type'
-            ticks = ['Exponential', 'Laplace', 'Gumbel']
+            ticks = ['Gaussian','Exponential', 'Laplace', 'Gumbel']
         elif c == 1:
-            codes = [f'MLP-ER{i}' for i in (24, 25, 26)]
+            codes = [f'MLP-ER{i}' for i in (1, 24, 25, 26)]
             lab = 'Expected degree'
-            ticks = ['4', '6', '8']
-        else:
-            codes = [f'MLP-ER{i}' for i in (27, 28, 29)]
-            lab = 'Number of nodes'
-            ticks = ['20', '30', '40'] # [to be updated]
+            ticks = ['2', '4', '6', '8']
         for r in range(2): 
                         
 
             w = 0.0
             axs[r,c].set_axisbelow(True)
             axs[r,c].grid(axis='y', linestyle='--')
-            axs[r,c].set_xticks([1.5, 4.5, 7.5])
+            axs[r,c].set_xticks([1.5, 4.5, 7.5, 10.5])
             axs[r,c].set_xticklabels(ticks)
             if r == 0:
                 axs[r,c].set_title(lab, fontsize='xx-large')
@@ -283,9 +281,9 @@ def plot_ablation():
             for method, color in colors.items():
                 rate = 100  if metric == 'F1' else 1
                 means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
-                errs = [np.std(np.array(output[code][method][metric])*rate) * 0.2 for code in codes]
+                errs = [np.std(np.array(output[code][method][metric])*rate) * 0.8 for code in codes]
                
-                axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+                axs[r,c].bar(np.array([1, 4, 7, 10]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
                 w += barwidth
 
             if c == 0: 
@@ -296,13 +294,13 @@ def plot_ablation():
                 axs[r,c].set_ylabel(metric_name, fontsize='x-large')
                 
     
-    axs[1,1].legend(bbox_to_anchor=[2.0, -0.3, 0.2, 0.2], ncol=6, fontsize='x-large')
+    axs[1,1].legend(bbox_to_anchor=[0.80, -0.3, 0.2, 0.2], ncol=6, fontsize='x-large')
     fig.savefig(f'figures/ablation.pdf')
 
 
-# plot ablation study
+
 
 # plot_runtime()
 # plot_intro()
-plot_quali()
-# plot_ablation()
+# plot_quali()
+plot_ablation()
