@@ -76,7 +76,7 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
                 if metric in ('F1', 'tpr'):
                     metric_name = f'{metric} (%)'
                 metric_name = f'ACCURACY (%)' if sem_type == 'neuro' and metric == 'RMSE' else metric.upper()
-                axs[c].set_ylabel(metric_name, fontsize='x-large')
+                axs[r,c].set_ylabel(metric_name, fontsize='x-large')
                   
 
     i = nrows - 1

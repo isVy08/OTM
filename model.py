@@ -106,29 +106,15 @@ class RealImputer(nn.Module):
             x[self.mask.bool()] = self.imps
         
         logvar = self.var(x)
+
+        # (logvar)^2 works better on sachs. 
         imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
+        # imps = self.mu(x) + torch.square(0.5 * logvar) * torch.randn_like(x)
+        
         imps = torch.relu(torch.tanh(imps))
         x = imps * self.mask + x
 
         return x 
-
-class SimpleImputer(nn.Module): 
-    def __init__(self, data, mask):
-        super(SimpleImputer, self).__init__()
-        print('Using Simple imputation ...')
-        imps = (torch.randn(data.shape, device = mask.device).float() + nanmean(data, 0))[mask.bool()]
-        
-        self.imps = nn.Parameter(imps)
-        
-        self.data = data 
-        self.mask = mask
-    
-    def forward(self): 
-        x = self.data.clone()  
-        x[self.mask.bool()] = self.imps        
-        return x
-
-
 
 class MissModel(nn.Module):
     def __init__(self, data, mask, hidden_dims, device, sem_type, initialized = None):
@@ -139,8 +125,10 @@ class MissModel(nn.Module):
         
         self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
 
-        if sem_type in ("neuro", 'sachs') or 'dream' in sem_type:
+        if sem_type in ("neuro", ) or 'dream' in sem_type:
             self.imputer = RealImputer(data, mask, [self.d, self.d, self.d], initialized)
+        elif sem_type == 'sachs':
+            self.imputer = RealImputer(data, mask, [self.d, self.d], initialized)
         else:
             self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
         
@@ -222,7 +210,7 @@ class DagmaNonlinear:
             
             l1_reg = lambda1 * self.model.scm.fc1_l1_reg()
             
-            if self.model.sem_type in ('mlp', 'sachs', 'neuro'):
+            if self.model.sem_type in ('mlp',):
                 obj = mu * (score + l1_reg) + h_val + 0.01 * rbf_kernel(Xhat, X)
             else:
                 obj = mu * (score + l1_reg) + h_val + 1.5 * rbf_kernel(Xhat, X)
