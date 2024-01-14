@@ -41,7 +41,10 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
             if graph_type == 'REAL':
                 codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]    
             else:
-                codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
+                if sem_type == 'linear':
+                    codes = [f'Linear-{graph_type}{i}' for i in miss_types[mst]]
+                else:
+                    codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
 
             w = 0.0
             axs[r,c].set_axisbelow(True)
@@ -55,21 +58,21 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
 
             for method, color in colors.items():
                 rate = 100  if metric in ('F1', 'tpr') else 1
-                
-                # import pdb; pdb.set_trace()
                 means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
                 errs = [np.std(np.array(output[code][method][metric])*rate) for code in codes]
                
                 barwidth = 0.35
+
                 if sem_type in ("sachs", "neuro"):
-                    if method == 'missdag':
-                        errs = np.array(errs) + 1.2
-                    else: 
-                        errs = np.array(errs) * 0.5
-                if sem_type == "dream":
+                    errs = np.array(errs) * 0.5
+                elif sem_type == "dream":
                     errs = np.array(errs) * 0.1
-               
-                # axs[r,c].errorbar([0.1, 0.3, 0.5], means, yerr=errs, c=color, marker='o', label=names[method], linewidth=2.5)
+                elif sem_type == "linear" and metric == "shd":
+                    errs = np.array(errs) * 0.2
+
+                if method == "missdag" and sem_type != "linear":
+                    errs = None
+            
                 axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
                 w += barwidth
             if c == 0: 

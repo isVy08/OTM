@@ -102,9 +102,9 @@ def plot_intro():
             for method, color in local_colors.items():
                 if method == 'complete':
                     if r == 1 and c == 0:
-                        axs[r,c].hlines(y = 95, xmin=0.8, xmax=8, linestyle='--', label="Complete data")
+                        axs[r,c].hlines(y = 95, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
                     elif r == 1 and c == 1:
-                        axs[r,c].hlines(y = 80, xmin=0.8, xmax=8, linestyle='--', label="Complete data")
+                        axs[r,c].hlines(y = 80, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
                 else:
                     rate = 100  if metric == 'F1' else 1
                     means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
@@ -207,56 +207,56 @@ def extract_runtime(config):
     return output
 
 def plot_scalability():
-    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
-    fig.tight_layout(pad=4.5, w_pad=1.0, h_pad=0.8)
+    # fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+    plt.tight_layout(pad=5.0, w_pad=1.0, h_pad=1.2)
     config = {27:20, 28:30, 29:40} #, 30:50, 31:100, 32:200}
     runtime = extract_runtime(config)
     ablation = load_pickle('output/ablation.pickle')
 
     xs = list(config.values())
+    ax1 = plt.subplot(212)
+
     for method in colors: 
-        axs[0].plot(xs, runtime[method], color=colors[method], marker='o', linewidth=2.0, label=names[method])
+        ax1.plot(xs, runtime[method], color=colors[method], marker='o', linewidth=2.0, label=names[method])
         # plt.fill_between(xs, np.array(output[method])+0.5, np.array(output[method])-0.5, facecolor=colors[method], alpha=0.5)
 
-        axs[0].set_xticks(xs) 
-        axs[0].set_xticklabels(xs)
+        ax1.set_xticks(xs) 
+        ax1.set_xticklabels(xs)
         
-        axs[0].set_title('Training time (hours)')
-    
-        axs[0].set_xlabel('Number of nodes')
+        ax1.set_ylabel('Training time (hours)')
+        ax1.set_xlabel('Number of nodes')
 
-    for c in (1,2):
+    for metric in ('shd', 'F1'):
         barwidth = 0.35
         codes = [f'MLP-ER{i}' for i in config]
-        axs[c].set_xlabel('Number of nodes')
+        ax = plt.subplot(221) if metric == 'shd' else plt.subplot(222)
+        # ax.set_xlabel('Number of nodes')
 
         w = 0.0
-        axs[c].set_axisbelow(True)
-        axs[c].grid(axis='y', linestyle='--')
-        axs[c].set_xticks([1.5, 4.5, 7.5])
-        axs[c].set_xticklabels(xs)
+        ax.set_axisbelow(True)
+        ax.grid(axis='y', linestyle='--')
+        ax.set_xticks([1.5, 4.5, 7.5])
+        ax.set_xticklabels(xs)
 
-        if c == 1:
-            metric = 'shd'
-            metric_name ='SHD'
-        else:
-            metric = 'F1'
-            metric_name ='F1 (%)'
-        metric = 'shd' if c == 1 else 'F1'
+        if metric == 'F1':
+            metric_name = 'F1 (%)'
+        else: 
+            metric_name = 'SHD'
+        
         for method, color in colors.items():
             rate = 100  if metric == 'F1' else 1
             means = [np.mean(np.array(ablation[code][method][metric])*rate) for code in codes]
             errs = [np.std(np.array(ablation[code][method][metric])*rate) * 0.8 for code in codes]
             
-            axs[c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
+            ax.bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
             w += barwidth
 
-        axs[c].set_title(metric_name, fontsize='x-large')
+        ax.set_title(metric_name, fontsize='x-large')
             
     
-    axs[1].legend(bbox_to_anchor=[-1.15, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
-    fig.savefig(f'figures/scalability.pdf')
-    # fig.savefig('figures/test.png')
+    # plt.legend(bbox_to_anchor=[0.1, -2.5, 0.2, 0.2], ncol=6)
+    plt.savefig(f'figures/scalability.pdf')
+    # plt.savefig('figures/test.png')
 
 
 def plot_quali():
@@ -288,7 +288,8 @@ def plot_quali():
             axs[r,c].set_axisbelow(True)
             axs[r,c].grid(axis='y', linestyle='--')
             axs[r,c].fill_between(xs, np.array(data)+pads[i], np.array(data)-pads[i], facecolor='lightcoral', alpha=0.5)
-            
+
+
             # ticks = list(range(0, 23000, 100))
             if r == 1:
                 axs[r,c].set_xlabel(r'$t \times 10^2$' + ' (step)')
@@ -354,6 +355,6 @@ def plot_ablation():
 
 
 # plot_scalability()
-plot_intro()
-# plot_quali()
+# plot_intro()
+plot_quali()
 # plot_ablation()

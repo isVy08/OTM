@@ -195,7 +195,6 @@ if __name__ == "__main__":
                 for method in output_missdag[code]:
                     output[code][method] = output_missdag[code][method]
     else:
-        # sem_type = 'mim'
         output = collect('otm', sem_type)
         output_baseline = collect('baseline', sem_type)
         output_missdag = collect('missdag', sem_type)
