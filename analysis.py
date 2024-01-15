@@ -61,40 +61,43 @@ def extract_baseline(output, graph_path, imp_path, sem_type):
             output[code][method]['RMSE'] = [np.round(float(rmse), 4)]
     return output
 
-def plot_intro():
-    from parse import extract_otm_missdag
+def plot_intro(miss_type):
+    # from parse import extract_otm_missdag
     local_colors = { "mean": "green", "sk": "orange", "iterative": "purple", "complete": None}
     local_names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer'}
     
     
-    mlp_output = extract_baseline({}, 'baseline_abs', 'baseline_abs_imputation', 'mlp')
-    linear_output = extract_baseline({}, 'v1/baseline_linear', 'v1/baseline_linear_imputation', 'linear')
     
-    fig, axs = plt.subplots(2,2, figsize=(12, 7), sharex=True)
+    nt_output = extract_baseline({}, 'baseline_abs', 'baseline_abs_imputation', 'mlp')
+    dm_output = load_pickle('output/mlp.pickle')
+    linear_output = load_pickle('output/linear.pickle')
+    fig, axs = plt.subplots(2,3, figsize=(12, 7), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
     barwidth = 0.50
     for r in range(2): 
-        for c in range(2): 
+        for c in range(3): 
             if c == 0:
                 output = linear_output
                 sem_type = 'Linear'
-            else:
-                output = mlp_output
+                sem_name = 'NOTEARS - Linear'
+            elif c == 1:
+                output = nt_output
                 sem_type = 'MLP'
-            output = linear_output if c == 0 else mlp_output
+                sem_name = 'NOTEARS - Nonlinear'
+            else:
+                output = dm_output
+                sem_type = 'MLP'
+                sem_name = 'DAGMA - Nonlinear'
+
             metric = 'RMSE' if r == 0 else 'F1'
-            codes = [f'{sem_type}-ER{i}' for i in miss_types['MCAR']]
+            codes = [f'{sem_type}-ER{i}' for i in miss_types[miss_type]]
 
             w = 0.0
             axs[r,c].set_axisbelow(True)
             axs[r,c].grid(axis='y', linestyle='--')
 
             if r == 0:
-                if sem_type == 'Linear':
-                    sem_name = 'Linear SCM'
-                else: 
-                    sem_name = 'Non-linear SCM'
                 axs[r,c].set_title(sem_name, fontsize='xx-large')
             axs[r,c].set_xticks([1.2, 4.2, 7.2])
             axs[r,c].set_xticklabels(['10%', '30%', '50%'])    
@@ -103,12 +106,13 @@ def plot_intro():
                 if method == 'complete':
                     if r == 1 and c == 0:
                         axs[r,c].hlines(y = 95, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
-                    elif r == 1 and c == 1:
-                        axs[r,c].hlines(y = 80, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
+                    elif r == 1 and c in (1,2):
+                        axs[r,c].hlines(y = 90, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
                 else:
                     rate = 100  if metric == 'F1' else 1
                     means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
-                    errs = [2.0 for _ in codes] if metric == 'F1' else [0.5 * rate for _ in codes]
+                    # errs = [2.0 for _ in codes] if metric == 'F1' else [0.5 * rate for _ in codes]
+                    errs = None
                 
 
                     axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=local_names[method])
@@ -125,7 +129,7 @@ def plot_intro():
             
 
     axs[1,1].legend(bbox_to_anchor=[0.7, -0.30, 0.2, 0.2], ncol=6, fontsize='x-large')
-    fig.savefig(f'figures/intro.pdf')
+    fig.savefig(f'figures/{miss_type}.png')
 
 def plot_linear():
     output = load_pickle(f'output/linear.pickle')
@@ -355,6 +359,6 @@ def plot_ablation():
 
 
 # plot_scalability()
-# plot_intro()
-plot_quali()
+plot_intro('MAR')
+# plot_quali()
 # plot_ablation()

@@ -108,9 +108,9 @@ else:
     rows = ['shd', 'F1']
     cols = ['MCAR', 'MAR', 'MNAR']
 
-plot_main(rows, cols, sem_type, graph_type, 'SL')
+# plot_main(rows, cols, sem_type, graph_type, 'SL')
 
-# if 'missdag' in colors: del colors['missdag']
-# rows = ['MAE', 'RMSE']
-# cols = ['MCAR', 'MAR', 'MNAR']
-# plot_main(rows, cols, sem_type, graph_type, 'MI')
+if 'missdag' in colors: del colors['missdag']
+rows = ['MAE', 'RMSE']
+cols = ['MCAR', 'MAR', 'MNAR']
+plot_main(rows, cols, sem_type, graph_type, 'MI')
