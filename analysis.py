@@ -61,60 +61,49 @@ def extract_baseline(output, graph_path, imp_path, sem_type):
             output[code][method]['RMSE'] = [np.round(float(rmse), 4)]
     return output
 
-def plot_intro(miss_type):
+def plot_intro():
     # from parse import extract_otm_missdag
     local_colors = { "mean": "green", "sk": "orange", "iterative": "purple", "complete": None}
-    local_names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer'}
-    
-    
-    
-    nt_output = extract_baseline({}, 'baseline_abs', 'baseline_abs_imputation', 'mlp')
-    dm_output = load_pickle('output/mlp.pickle')
-    linear_output = load_pickle('output/linear.pickle')
-    fig, axs = plt.subplots(2,3, figsize=(12, 7), sharex=True)
+    local_names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer', "complete": "Complete data"}
+
+    output = load_pickle('output/mlp.pickle')
+    from parse import extract_otm_missdag
+    complete = extract_otm_missdag({}, 'complete', 'mlp', 'complete')
+    fig, axs = plt.subplots(2,3, figsize=(15, 7), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
     barwidth = 0.50
     for r in range(2): 
         for c in range(3): 
             if c == 0:
-                output = linear_output
-                sem_type = 'Linear'
-                sem_name = 'NOTEARS - Linear'
+                mst = "MCAR"
             elif c == 1:
-                output = nt_output
-                sem_type = 'MLP'
-                sem_name = 'NOTEARS - Nonlinear'
+                mst = "MAR"
             else:
-                output = dm_output
-                sem_type = 'MLP'
-                sem_name = 'DAGMA - Nonlinear'
+                mst = "MNAR"
 
             metric = 'RMSE' if r == 0 else 'F1'
-            codes = [f'{sem_type}-ER{i}' for i in miss_types[miss_type]]
+            codes = [f'MLP-ER{i}' for i in miss_types[mst]]
+            
 
             w = 0.0
             axs[r,c].set_axisbelow(True)
             axs[r,c].grid(axis='y', linestyle='--')
 
             if r == 0:
-                axs[r,c].set_title(sem_name, fontsize='xx-large')
+                axs[r,c].set_title(mst, fontsize='x-large')
             axs[r,c].set_xticks([1.2, 4.2, 7.2])
             axs[r,c].set_xticklabels(['10%', '30%', '50%'])    
 
             for method, color in local_colors.items():
+                rate = 100  if metric == 'F1' else 1
                 if method == 'complete':
-                    if r == 1 and c == 0:
+                    # means = [np.mean(np.array(complete[code][method][metric])*rate) for code in codes]
+                    if r == 1:
                         axs[r,c].hlines(y = 95, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
-                    elif r == 1 and c in (1,2):
-                        axs[r,c].hlines(y = 90, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
                 else:
-                    rate = 100  if metric == 'F1' else 1
                     means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
-                    # errs = [2.0 for _ in codes] if metric == 'F1' else [0.5 * rate for _ in codes]
-                    errs = None
-                
-
+                    errs = [np.std(np.array(output[code][method][metric])*rate) for code in codes]
                     axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=local_names[method])
                     w += barwidth
                 
@@ -126,10 +115,14 @@ def plot_intro(miss_type):
                     metric_name = metric
                 axs[r,c].set_ylabel(metric_name, fontsize='x-large')
             
+            if r == 1: 
+                axs[r,c].set_xlabel("Missing rate")
+            
             
 
-    axs[1,1].legend(bbox_to_anchor=[0.7, -0.30, 0.2, 0.2], ncol=6, fontsize='x-large')
-    fig.savefig(f'figures/{miss_type}.png')
+    axs[1,1].legend(bbox_to_anchor=[1.0, -0.35, 0.2, 0.2], ncol=4, fontsize='medium')
+    # fig.savefig(f'figures/test.png')
+    fig.savefig(f'figures/intro.pdf')
 
 def plot_linear():
     output = load_pickle(f'output/linear.pickle')
@@ -351,14 +344,16 @@ def plot_ablation():
                 else:
                     metric_name = metric.upper()
                 axs[r,c].set_ylabel(metric_name, fontsize='x-large')
-                
+
+            
     
     axs[1,1].legend(bbox_to_anchor=[0.80, -0.3, 0.2, 0.2], ncol=6, fontsize='x-large')
+    # axs[1,1].legend(bbox_to_anchor=[1.5, -0.35, 0.2, 0.2], ncol=6, fontsize='medium')
     fig.savefig(f'figures/ablation.pdf')
 
 
 
 # plot_scalability()
-plot_intro('MAR')
+plot_intro()
 # plot_quali()
 # plot_ablation()

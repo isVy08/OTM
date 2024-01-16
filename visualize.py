@@ -38,6 +38,7 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
     for r in range(nrows): 
         for c in range(ncols): 
             metric, mst = rows[r], cols[c]
+
             if graph_type == 'REAL':
                 codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]    
             else:
@@ -76,17 +77,23 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
                 axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
                 w += barwidth
             if c == 0: 
-                if metric in ('F1', 'tpr'):
-                    metric_name = f'{metric} (%)'
-                metric_name = f'ACCURACY (%)' if sem_type == 'neuro' and metric == 'RMSE' else metric.upper()
+                if metric == 'F1':
+                    metric_name = 'F1 (%)'
+                elif sem_type == 'neuro' and metric == 'RMSE':
+                    metric_name = 'ACCURACY (%)'
+                else: 
+                    metric_name = metric.upper()
                 axs[r,c].set_ylabel(metric_name, fontsize='x-large')
+            
+            if r == 1: 
+                axs[r,c].set_xlabel("Missing rate")
                   
 
     i = nrows - 1
     if nrows == 3:
-        axs[i,i].legend(bbox_to_anchor=[0.82, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
+        axs[i,i].legend(bbox_to_anchor=[0.82, -0.4, 0.2, 0.2], ncol=6, fontsize='medium')
     else:
-        axs[i,i].legend(bbox_to_anchor=[-1.1, -0.35, 0.2, 0.2], ncol=6, fontsize='x-large')
+        axs[i,i].legend(bbox_to_anchor=[1.5, -0.35, 0.2, 0.2], ncol=6, fontsize='medium')
     
     plt.savefig(f'figures/{sem_type}-{graph_type}-{kind}.pdf')
 
@@ -100,17 +107,14 @@ output = load_pickle(f'output/{sem_type}.pickle')
 if sem_type == 'gp-add': sem_type = 'gpadd'
 
 # Visualization of causal discovery
-if graph_type == 'REAL':
 
-    rows = ['shd', 'F1']
-    cols = ['MCAR', 'MAR', 'MNAR']
-else:
-    rows = ['shd', 'F1']
-    cols = ['MCAR', 'MAR', 'MNAR']
 
-# plot_main(rows, cols, sem_type, graph_type, 'SL')
-
-if 'missdag' in colors: del colors['missdag']
-rows = ['MAE', 'RMSE']
+rows = ['shd', 'F1']
 cols = ['MCAR', 'MAR', 'MNAR']
-plot_main(rows, cols, sem_type, graph_type, 'MI')
+
+plot_main(rows, cols, sem_type, graph_type, 'SL')
+
+# if 'missdag' in colors: del colors['missdag']
+# rows = ['MAE', 'RMSE']
+# cols = ['MCAR', 'MAR', 'MNAR']
+# plot_main(rows, cols, sem_type, graph_type, 'MI')
