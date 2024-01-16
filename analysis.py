@@ -120,9 +120,9 @@ def plot_intro():
             
             
 
-    axs[1,1].legend(bbox_to_anchor=[1.0, -0.35, 0.2, 0.2], ncol=4, fontsize='medium')
-    # fig.savefig(f'figures/test.png')
-    fig.savefig(f'figures/intro.pdf')
+    axs[1,1].legend(bbox_to_anchor=[1.5, -0.35, 0.2, 0.2], ncol=4, fontsize='x-large')
+    # fig.savefig(f'figures/test.png', bbox_inches='tight')
+    fig.savefig(f'figures/intro.pdf', bbox_inches='tight')
 
 def plot_linear():
     output = load_pickle(f'output/linear.pickle')

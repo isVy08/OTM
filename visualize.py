@@ -91,11 +91,11 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
 
     i = nrows - 1
     if nrows == 3:
-        axs[i,i].legend(bbox_to_anchor=[0.82, -0.4, 0.2, 0.2], ncol=6, fontsize='medium')
+        axs[i,i].legend(bbox_to_anchor=[0.82, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
     else:
-        axs[i,i].legend(bbox_to_anchor=[1.5, -0.35, 0.2, 0.2], ncol=6, fontsize='medium')
+        axs[1,1].legend(bbox_to_anchor=[1.90, -0.35, 0.2, 0.2], ncol=6, fontsize='x-large')
     
-    plt.savefig(f'figures/{sem_type}-{graph_type}-{kind}.pdf')
+    fig.savefig(f'figures/{sem_type}-{graph_type}-{kind}.pdf', bbox_inches='tight')
 
 
 
