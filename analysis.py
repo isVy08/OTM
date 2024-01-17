@@ -206,7 +206,7 @@ def extract_runtime(config):
 def plot_scalability():
     # fig, axs = plt.subplots(1, 3, figsize=(15, 5))
     plt.tight_layout(pad=5.0, w_pad=1.0, h_pad=1.2)
-    config = {27:20, 28:30, 29:40} #, 30:50, 31:100, 32:200}
+    config = {27:20, 28:30, 29:40, 30:50, 31:100} # , 32:200}
     runtime = extract_runtime(config)
     ablation = load_pickle('output/ablation.pickle')
 
@@ -224,7 +224,7 @@ def plot_scalability():
         ax1.set_xlabel('Number of nodes')
 
     for metric in ('shd', 'F1'):
-        barwidth = 0.35
+        # barwidth = 0.40
         codes = [f'MLP-ER{i}' for i in config]
         ax = plt.subplot(221) if metric == 'shd' else plt.subplot(222)
         # ax.set_xlabel('Number of nodes')
@@ -232,7 +232,7 @@ def plot_scalability():
         w = 0.0
         ax.set_axisbelow(True)
         ax.grid(axis='y', linestyle='--')
-        ax.set_xticks([1.5, 4.5, 7.5])
+        ax.set_xticks([1.5, 4.5, 7.5, 10.5, 13.5])
         ax.set_xticklabels(xs)
 
         if metric == 'F1':
@@ -245,15 +245,16 @@ def plot_scalability():
             means = [np.mean(np.array(ablation[code][method][metric])*rate) for code in codes]
             errs = [np.std(np.array(ablation[code][method][metric])*rate) * 0.8 for code in codes]
             
-            ax.bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
-            w += barwidth
+            
+            ax.errorbar(np.array([1, 4, 7, 10, 13]) + w , means, yerr=errs, color=color, label=names[method], marker='o', linewidth=1.0)
+            # w += barwidth
 
         ax.set_title(metric_name, fontsize='x-large')
             
     
-    # plt.legend(bbox_to_anchor=[0.1, -2.5, 0.2, 0.2], ncol=6)
-    plt.savefig(f'figures/scalability.pdf')
-    # plt.savefig('figures/test.png')
+    ax1.legend(bbox_to_anchor=[0.78, -0.45, 0.2, 0.2], ncol=3)
+    plt.savefig(f'figures/scalability.pdf', bbox_inches='tight')
+    # plt.savefig('figures/test.png',bbox_inches='tight')
 
 
 def plot_quali():
@@ -353,7 +354,7 @@ def plot_ablation():
 
 
 
-# plot_scalability()
-plot_intro()
+plot_scalability()
+# plot_intro()
 # plot_quali()
 # plot_ablation()
