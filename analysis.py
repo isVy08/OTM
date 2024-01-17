@@ -111,6 +111,8 @@ def plot_intro():
             if c == 0: 
                 if metric in ('F1', 'tpr'):
                     metric_name = f'{metric} (%)'
+                elif metric == 'RMSE':
+                    metric_name = r'$\Vert\widehat{\mathbf{X}} - \mathbf{X}\Vert_2$'
                 else:
                     metric_name = metric
                 axs[r,c].set_ylabel(metric_name, fontsize='x-large')
@@ -262,7 +264,7 @@ def plot_quali():
 
     # mae, rmse, ot_xy, ot_xx, ot_yx, graph_metrics 
     output = load_pickle('output/quanti_behavior.pkl')
-    metrics = ('RMSE', r'$W_2(\widehat{\mathbf{X}}, \mathbf{X})$', 'SHD', 'F1 (%)')
+    metrics = (r'$\Vert\widehat{\mathbf{X}} - \mathbf{X}\Vert_2$', r'$W_2(\widehat{\mathbf{X}}, \mathbf{X})$', 'SHD', 'F1 (%)')
     pads = [0.6, 20, 7, 7]
 
     fig, axs = plt.subplots(2,2, figsize=(9, 6), sharex=True)
@@ -354,7 +356,7 @@ def plot_ablation():
 
 
 
-plot_scalability()
-# plot_intro()
-# plot_quali()
+# plot_scalability()
+plot_intro()
+plot_quali()
 # plot_ablation()
