@@ -208,7 +208,7 @@ def extract_runtime(config):
 def plot_scalability():
     # fig, axs = plt.subplots(1, 3, figsize=(15, 5))
     plt.tight_layout(pad=5.0, w_pad=1.0, h_pad=1.2)
-    config = {27:20, 28:30, 29:40, 30:50, 31:100} # , 32:200}
+    config = {27:20, 28:30, 29:40, 30:50, 31:100, 32:200}
     runtime = extract_runtime(config)
     ablation = load_pickle('output/ablation.pickle')
 
@@ -216,7 +216,7 @@ def plot_scalability():
     ax1 = plt.subplot(212)
 
     for method in colors: 
-        ax1.plot(xs, runtime[method], color=colors[method], marker='o', linewidth=2.0, label=names[method])
+        ax1.plot(xs, runtime[method], color=colors[method], marker='o', linewidth=1.0, label=names[method])
         # plt.fill_between(xs, np.array(output[method])+0.5, np.array(output[method])-0.5, facecolor=colors[method], alpha=0.5)
 
         ax1.set_xticks(xs) 
@@ -234,7 +234,7 @@ def plot_scalability():
         w = 0.0
         ax.set_axisbelow(True)
         ax.grid(axis='y', linestyle='--')
-        ax.set_xticks([1.5, 4.5, 7.5, 10.5, 13.5])
+        ax.set_xticks([1.5, 4.5, 7.5, 10.5, 13.5, 16.5])
         ax.set_xticklabels(xs)
 
         if metric == 'F1':
@@ -248,7 +248,7 @@ def plot_scalability():
             errs = [np.std(np.array(ablation[code][method][metric])*rate) * 0.8 for code in codes]
             
             
-            ax.errorbar(np.array([1, 4, 7, 10, 13]) + w , means, yerr=errs, color=color, label=names[method], marker='o', linewidth=1.0)
+            ax.errorbar(np.array([1, 4, 7, 10, 13, 16]) + w , means, yerr=errs, color=color, label=names[method], marker='o', linewidth=1.0)
             # w += barwidth
 
         ax.set_title(metric_name, fontsize='x-large')
@@ -356,7 +356,7 @@ def plot_ablation():
 
 
 
-# plot_scalability()
-plot_intro()
-plot_quali()
+plot_scalability()
+# plot_intro()
+# plot_quali()
 # plot_ablation()

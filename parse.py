@@ -182,9 +182,8 @@ if __name__ == "__main__":
     elif sem_type == 'ablation':
         output = collect('otm', 'mlp', seeds=(1,2,3), root='output/ablation')
 
-        del output['MLP-ER32']
         output_baseline = collect('baseline', 'mlp', seeds=(1,2,3), root='output/ablation')
-        output_missdag = collect('missdag', 'mlp', seeds=(1,1,1), root='output/ablation')
+        output_missdag = collect('missdag', 'mlp', seeds=(1,2,3), root='output/ablation')
 
 
         for code in output:
