@@ -180,9 +180,9 @@ if __name__ == "__main__":
                 output[code][method] = output_missdag[code][method]
     
     elif sem_type == 'ablation':
-        output = collect('otm', 'mlp', seeds=(1,2,3), root='output/ablation')
+        output = collect('otm', 'mlp', seeds=(1,2,3,4), root='output/ablation')
 
-        output_baseline = collect('baseline', 'mlp', seeds=(1,2,3), root='output/ablation')
+        output_baseline = collect('baseline', 'mlp', seeds=(1,2,3,4), root='output/ablation')
         output_missdag = collect('missdag', 'mlp', seeds=(1,2,3), root='output/ablation')
 
 

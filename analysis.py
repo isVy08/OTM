@@ -91,9 +91,9 @@ def plot_intro():
             axs[r,c].grid(axis='y', linestyle='--')
 
             if r == 0:
-                axs[r,c].set_title(mst, fontsize='x-large')
+                axs[r,c].set_title(mst, fontsize='xx-large')
             axs[r,c].set_xticks([1.2, 4.2, 7.2])
-            axs[r,c].set_xticklabels(['10%', '30%', '50%'])    
+            axs[r,c].set_xticklabels(['10%', '30%', '50%'], fontsize='xx-large')    
 
             for method, color in local_colors.items():
                 rate = 100  if metric == 'F1' else 1
@@ -115,14 +115,14 @@ def plot_intro():
                     metric_name = r'$\Vert\widehat{\mathbf{X}} - \mathbf{X}\Vert_2$'
                 else:
                     metric_name = metric
-                axs[r,c].set_ylabel(metric_name, fontsize='x-large')
+                axs[r,c].set_ylabel(metric_name, fontsize='xx-large')
             
             if r == 1: 
-                axs[r,c].set_xlabel("Missing rate")
+                axs[r,c].set_xlabel("Missing rate", fontsize='xx-large')
             
             
 
-    axs[1,1].legend(bbox_to_anchor=[1.5, -0.35, 0.2, 0.2], ncol=4, fontsize='x-large')
+    axs[1,1].legend(bbox_to_anchor=[1.7, -0.42, 0.2, 0.2], ncol=4, fontsize='xx-large')
     # fig.savefig(f'figures/test.png', bbox_inches='tight')
     fig.savefig(f'figures/intro.pdf', bbox_inches='tight')
 
@@ -147,9 +147,9 @@ def plot_linear():
             axs[r,c].grid(axis='y', linestyle='--')
 
             if r == 0:
-                axs[r,c].set_title(f'{graph_type} graph', fontsize='xx-large')
+                axs[r,c].set_title(f'LGM-NV-{graph_type}', fontsize='xx-large')
             axs[r,c].set_xticks([1.5, 4.5, 7.5])
-            axs[r,c].set_xticklabels(['MCAR', 'MAR', 'MNAR'])
+            axs[r,c].set_xticklabels(['MCAR', 'MAR', 'MNAR'], fontsize='xx-large')
 
             for method, color in colors.items():
                 rate = 100  if metric == 'F1' else 1
@@ -164,10 +164,11 @@ def plot_linear():
                     metric_name = f'{metric} (%)'
                 else:
                     metric_name = metric.upper()
-                axs[r,c].set_ylabel(metric_name, fontsize='x-large')
+                axs[r,c].set_ylabel(metric_name, fontsize='xx-large')
                 
     
-    axs[1,1].legend(bbox_to_anchor=[0.5, -0.30, 0.2, 0.2], ncol=3, fontsize='x-large')
+    axs[1,1].legend(bbox_to_anchor=[0.5, -0.32, 0.2, 0.2], ncol=3, fontsize='x-large')
+    # axs[1,1].legend(bbox_to_anchor=[0.80, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
     fig.savefig(f'figures/linear.pdf', bbox_inches='tight')
 
 def extract_runtime(config):
@@ -222,8 +223,8 @@ def plot_scalability():
         ax1.set_xticks(xs) 
         ax1.set_xticklabels(xs)
         
-        ax1.set_ylabel('Training time (hours)')
-        ax1.set_xlabel('Number of nodes')
+        ax1.set_ylabel('Training time (hours)', fontsize='large')
+        ax1.set_xlabel('Number of nodes', fontsize='large')
 
     for metric in ('shd', 'F1'):
         # barwidth = 0.40
@@ -235,7 +236,7 @@ def plot_scalability():
         ax.set_axisbelow(True)
         ax.grid(axis='y', linestyle='--')
         ax.set_xticks([1.5, 4.5, 7.5, 10.5, 13.5, 16.5])
-        ax.set_xticklabels(xs)
+        ax.set_xticklabels(xs, fontsize='large')
 
         if metric == 'F1':
             metric_name = 'F1 (%)'
@@ -254,7 +255,7 @@ def plot_scalability():
         ax.set_title(metric_name, fontsize='x-large')
             
     
-    ax1.legend(bbox_to_anchor=[0.78, -0.45, 0.2, 0.2], ncol=3)
+    ax1.legend(bbox_to_anchor=[0.90, -0.45, 0.2, 0.2], ncol=3, fontsize='large')
     plt.savefig(f'figures/scalability.pdf', bbox_inches='tight')
     # plt.savefig('figures/test.png',bbox_inches='tight')
 
@@ -290,11 +291,12 @@ def plot_quali():
             axs[r,c].fill_between(xs, np.array(data)+pads[i], np.array(data)-pads[i], facecolor='lightcoral', alpha=0.5)
 
 
-            # ticks = list(range(0, 23000, 100))
             if r == 1:
-                axs[r,c].set_xlabel(r'$t \times 10^2$' + ' (step)')
+                axs[r,c].set_xlabel(r'$t \times 10^2$' + ' (step)', fontsize = 'xx-large')
             
-            # axs[r,c].set_xticklabels(ticks)
+            axs[r,c].tick_params(axis='both', which='major', labelsize=12)
+            # axs[r,c].set_xticklabels(ticks, fontsize='x-large')
+            
 
             i += 1
     # plt.savefig('figures/test.png')
@@ -327,7 +329,7 @@ def plot_ablation():
             axs[r,c].set_axisbelow(True)
             axs[r,c].grid(axis='y', linestyle='--')
             axs[r,c].set_xticks([1.5, 4.5, 7.5, 10.5])
-            axs[r,c].set_xticklabels(ticks)
+            axs[r,c].set_xticklabels(ticks, fontsize = 'xx-large')
             if r == 0:
                 axs[r,c].set_title(lab, fontsize='xx-large')
                         
@@ -346,17 +348,17 @@ def plot_ablation():
                     metric_name = f'{metric} (%)'
                 else:
                     metric_name = metric.upper()
-                axs[r,c].set_ylabel(metric_name, fontsize='x-large')
+                axs[r,c].set_ylabel(metric_name, fontsize='xx-large')
 
             
     
-    axs[1,1].legend(bbox_to_anchor=[0.80, -0.3, 0.2, 0.2], ncol=6, fontsize='x-large')
-    # axs[1,1].legend(bbox_to_anchor=[1.5, -0.35, 0.2, 0.2], ncol=6, fontsize='medium')
+    axs[1,1].legend(bbox_to_anchor=[0.80, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
     fig.savefig(f'figures/ablation.pdf')
 
 
 
-plot_scalability()
+# plot_scalability()
 # plot_intro()
 # plot_quali()
 # plot_ablation()
+plot_linear()

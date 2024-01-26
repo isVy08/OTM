@@ -55,7 +55,7 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
             if r == 0:
                 axs[r,c].set_title(mst, fontsize='xx-large')
             axs[r,c].set_xticks([2, 5, 8])
-            axs[r,c].set_xticklabels(['10%', '30%', '50%'])
+            axs[r,c].set_xticklabels(['10%', '30%', '50%'], fontsize='x-large')
 
             for method, color in colors.items():
                 rate = 100  if metric in ('F1', 'tpr') else 1
@@ -86,14 +86,14 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
                 axs[r,c].set_ylabel(metric_name, fontsize='x-large')
             
             if r == 1: 
-                axs[r,c].set_xlabel("Missing rate")
+                axs[r,c].set_xlabel("Missing rate", fontsize='x-large')
                   
 
     i = nrows - 1
     if nrows == 3:
         axs[i,i].legend(bbox_to_anchor=[0.82, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
     else:
-        axs[1,1].legend(bbox_to_anchor=[1.90, -0.35, 0.2, 0.2], ncol=6, fontsize='x-large')
+        axs[1,1].legend(bbox_to_anchor=[1.90, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
     
     fig.savefig(f'figures/{sem_type}-{graph_type}-{kind}.pdf', bbox_inches='tight')
 
