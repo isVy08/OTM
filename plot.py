@@ -28,25 +28,35 @@ colors = {'otm': "red",
 names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
          'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
 
-# del colors['missdag']
 
-def plot_main(rows, cols, sem_type, graph_type, kind):
+def plot_sim(mst, exp):
+
+    rows = ['shd', 'F1']
     nrows = len(rows)
-    ncols = len(cols)
-    fig, axs = plt.subplots(nrows,ncols, figsize=(15, 7), sharex=True)
-    fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
+    if exp == 'SIM':
+        cols = [('mlp','ER'), ('mlp','SF'), ('mim','ER'), ('mim','SF')]
+        ncols = len(cols)
+        fig, axs = plt.subplots(nrows, ncols, figsize=(19, 7), sharex=True)
+    else:
+        cols = [('sachs','REAL'), ('dream','REAL'), ('neuro','REAL')]
+        ncols = len(cols)
+        fig, axs = plt.subplots(nrows,ncols, figsize=(17, 7), sharex=True)
+   
+    
+    
+    
+    fig.tight_layout(w_pad=1.0, h_pad=0.8)
     for r in range(nrows): 
         for c in range(ncols):
+            sem_type, graph_type = cols[c]
 
-            metric, mst = rows[r], cols[c]
-
+            metric = rows[r]
             if graph_type == 'REAL':
-                codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]    
+                codes = [f'{sem_type.upper()}-{graph_type}1{i}' for i in miss_types[mst]]
             else:
-                if sem_type == 'linear':
-                    codes = [f'Linear-{graph_type}{i}' for i in miss_types[mst]]
-                else:
-                    codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
+                codes = [f'{sem_type.upper()}-{graph_type}{i}' for i in miss_types[mst]]
+
+            output = load_pickle(f'output/{sem_type}.pickle')
 
             w = 0.0
             axs[r,c].set_axisbelow(True)
@@ -54,7 +64,16 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
             axs[r,c].grid(axis='y', linestyle='--')
 
             if r == 0:
-                axs[r,c].set_title(mst, fontsize='xx-large')
+                if exp == 'SIM':
+                    title = f'{sem_type.upper()}-{graph_type}'
+                else:
+                    if sem_type == 'dream':
+                        title = 'DREAM4'
+                    elif sem_type == 'neuro':
+                        title = 'NEUROPATHIC PAIN'
+                    else: 
+                        title = 'SACHS'
+                axs[r,c].set_title(title, fontsize='xx-large')
             axs[r,c].set_xticks([2, 5, 8])
             axs[r,c].set_xticklabels(['10%', '30%', '50%'], fontsize='x-large')
 
@@ -90,32 +109,25 @@ def plot_main(rows, cols, sem_type, graph_type, kind):
             if r == 1: 
                 axs[r,c].set_xlabel("Missing rate", fontsize='x-large')
                   
-
-    i = nrows - 1
-    if nrows == 3:
-        axs[i,i].legend(bbox_to_anchor=[0.82, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
+    if len(cols) == 4:
+        axs[1,2].legend(bbox_to_anchor=[1.2, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
     else:
-        axs[1,1].legend(bbox_to_anchor=[1.90, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
+        axs[1,1].legend(bbox_to_anchor=[1.5, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
     
-    fig.savefig(f'figures/{sem_type}-{graph_type}-{kind}.pdf', bbox_inches='tight')
+    
+    fig.savefig(f'figures/{exp}-{mst}.pdf', bbox_inches='tight')
+    # fig.savefig(f'figures/test', bbox_inches='tight')
 
 
-sem_type = sys.argv[1]
 
-graph_type = sys.argv[2]
-output = load_pickle(f'output/{sem_type}.pickle')
-if sem_type == 'gp-add': sem_type = 'gpadd'
+
+exp = sys.argv[1]
 
 # Visualization of causal discovery
 
-
-rows = ['shd', 'F1']
-cols = ['MCAR', 'MAR', 'MNAR']
-
-plot_main(rows, cols, sem_type, graph_type, 'SL')
+for mst in ('MCAR', 'MAR', 'MNAR'):
+    plot_sim(mst, exp)
 
 
-# if 'missdag' in colors: del colors['missdag']
-# rows = ['MAE', 'RMSE']
-# cols = ['MCAR', 'MAR', 'MNAR']
-# plot_main(rows, cols, sem_type, graph_type, 'MI')
+# plot_sim('MAR', exp)
+# plot_sim('MNAR')
