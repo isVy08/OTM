@@ -147,7 +147,7 @@ def plot_linear():
             axs[r,c].grid(axis='y', linestyle='--')
 
             if r == 0:
-                axs[r,c].set_title(f'LGM-NV-{graph_type}', fontsize='xx-large')
+                axs[r,c].set_title(f'LGM-NV-{graph_type} (1000 x 50)', fontsize='xx-large')
             axs[r,c].set_xticks([1.5, 4.5, 7.5])
             axs[r,c].set_xticklabels(['MCAR', 'MAR', 'MNAR'], fontsize='xx-large')
 
@@ -357,8 +357,8 @@ def plot_ablation():
 
 
 
-plot_scalability()
-plot_intro()
-plot_quali()
-plot_ablation()
+# plot_scalability()
+# plot_intro()
+# plot_quali()
+# plot_ablation()
 plot_linear()

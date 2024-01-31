@@ -65,14 +65,14 @@ def plot_sim(mst, exp):
 
             if r == 0:
                 if exp == 'SIM':
-                    title = f'{sem_type.upper()}-{graph_type}'
+                    title = f'{sem_type.upper()}-{graph_type} (1000 x 50)'
                 else:
                     if sem_type == 'dream':
-                        title = 'DREAM4'
+                        title = 'DREAM4 (100 x 100)'
                     elif sem_type == 'neuro':
-                        title = 'NEUROPATHIC PAIN'
+                        title = 'NEUROPATHIC PAIN (1000 x 222)'
                     else: 
-                        title = 'SACHS'
+                        title = 'SACHS (7456 x 11)'
                 axs[r,c].set_title(title, fontsize='xx-large')
             axs[r,c].set_xticks([2, 5, 8])
             axs[r,c].set_xticklabels(['10%', '30%', '50%'], fontsize='x-large')
