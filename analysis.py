@@ -129,7 +129,7 @@ def plot_intro():
 def plot_linear():
     output = load_pickle(f'output/linear.pickle')
    
-    fig, axs = plt.subplots(2,2, figsize=(12, 7), sharex=True)
+    fig, axs = plt.subplots(2,2, figsize=(14, 7), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
     barwidth = 0.35
@@ -167,8 +167,8 @@ def plot_linear():
                 axs[r,c].set_ylabel(metric_name, fontsize='xx-large')
                 
     
-    axs[1,1].legend(bbox_to_anchor=[0.5, -0.32, 0.2, 0.2], ncol=3, fontsize='x-large')
-    # axs[1,1].legend(bbox_to_anchor=[0.80, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
+    # axs[1,1].legend(bbox_to_anchor=[0.3, -0.32, 0.2, 0.2], ncol=3, fontsize='x-large')
+    axs[1,1].legend(bbox_to_anchor=[0.87, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
     fig.savefig(f'figures/linear.pdf', bbox_inches='tight')
 
 def extract_runtime(config):
@@ -357,8 +357,8 @@ def plot_ablation():
 
 
 
-# plot_scalability()
-# plot_intro()
-# plot_quali()
-# plot_ablation()
+plot_scalability()
+plot_intro()
+plot_quali()
+plot_ablation()
 plot_linear()

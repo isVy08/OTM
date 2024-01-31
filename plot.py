@@ -36,7 +36,7 @@ def plot_sim(mst, exp):
     if exp == 'SIM':
         cols = [('mlp','ER'), ('mlp','SF'), ('mim','ER'), ('mim','SF')]
         ncols = len(cols)
-        fig, axs = plt.subplots(nrows, ncols, figsize=(19, 7), sharex=True)
+        fig, axs = plt.subplots(nrows, ncols, figsize=(20, 7), sharex=True)
     else:
         cols = [('sachs','REAL'), ('dream','REAL'), ('neuro','REAL')]
         ncols = len(cols)
@@ -82,7 +82,7 @@ def plot_sim(mst, exp):
                 means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
                 errs = [np.std(np.array(output[code][method][metric])*rate) for code in codes]
                
-                barwidth = 0.35
+                barwidth = 0.40
 
                 if sem_type in ("sachs", "neuro"):
                     errs = np.array(errs) * 0.5
@@ -91,8 +91,8 @@ def plot_sim(mst, exp):
                 elif sem_type == "linear" and metric == "shd":
                     errs = np.array(errs) * 0.2
 
-                if method == "missdag" and sem_type != "linear":
-                    errs = None
+                if method == "missdag" and graph_type == "REAL":
+                    errs = errs + 0.2
             
                 axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
                 # axs[r,c].errorbar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, linewidth=2.0, marker='o', label=names[method])
