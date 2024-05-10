@@ -19,7 +19,7 @@ mkdir dataset
 python config.py
 ```
 
-## Experiments with OTM
+## Experiments on OTM
 For the non-linear case, OTM runs on [DAGMA](https://arxiv.org/abs/2209.08037), which uses Adam optimizer. To run OTM, for example on an MCAR dataset with 10% missing rate (corresponding to `config_id=1`) that follows an ER structure and MLP causal model, run the following command. Create an `output/` directory to save the estimated DAG results. 
 ```
 mkdir output
@@ -31,7 +31,7 @@ For the linear case, OTM runs on [NOTEARS](https://arxiv.org/abs/1803.01422), wh
 ```
 python linear_solver.py 1 ER
 ```
-## Experiments with baselines
+## Baseline methods
 Use `miss_baselines.py` to run the imputation baselines. It first imputes the missing data and runs DAGMA for non-linear causal discovery and NOTEARs for linear case. 
 For example, to experiment with `missforest` imputer in the above setting, run 
 ```
