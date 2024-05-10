@@ -1,16 +1,8 @@
 # OTM
-Causal Discovery with Missing Data
+This repo includes codes for reproducing the experiments in the paper [Optimal Transport for Structure Learning Under Missing Data](https://arxiv.org/abs/2402.15255)
+ accepted at ICML 2024.
 
-Linear model
+## Dependencies
 ```
-solver.py
+pip install -r requirements.txt
 ```
-
-Non-linear model
-
-For example, running causal discovery on setting MLP-ER1
-```
-python main.py 1 ER mlp
-```
-
-On the first run, a synthetic dataset following configurations in `config.py` will be created. The codes for generating synthetic data are copied from MissDAG. 
