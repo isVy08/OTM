@@ -9,56 +9,8 @@ import typing
 from utils.arch import linear_sequential
 
 
-__all__ = ["DagmaMLP", "DagmaNonlinear", "DagmaLinear"]
+__all__ = ["DagmaMLP", "DagmaNonlinear"]
 
-class DagmaLinear(nn.Module): 
-    """
-    Class that models the structural equations for the causal graph using MLPs.
-    """
-    
-    def __init__(self, dims, device, bias = True, dtype: torch.dtype = torch.double):
-        r"""
-        Parameters
-        ----------
-        dims : typing.List[int]
-            Number of neurons in hidden layers of each MLP representing each structural equation.
-        bias : bool, optional
-            Flag whether to consider bias or not, by default ``True``
-        dtype : torch.dtype, optional
-            Float precision, by default ``torch.double``
-        """
-        torch.set_default_dtype(dtype)
-        super(DagmaLinear, self).__init__()
-        assert len(dims) >= 2
-        assert dims[-1] == 1
-        self.dims, self.d = dims, dims[0]
-        self.I = torch.eye(self.d, device = device)
-        self.fc1 = nn.Linear(self.d, self.d, bias=bias)
-        # nn.init.zeros_(self.fc1.weight)
-        # nn.init.zeros_(self.fc1.bias)
-        
-    def forward(self, x: torch.Tensor) -> torch.Tensor:  
-        x = self.fc1(x)
-        return x
-
-    def h_func(self, s: float = 1.0) -> torch.Tensor:
-        fc1_weight = self.fc1.weight
-        fc1_weight = fc1_weight.view(self.d, -1, self.d)
-        A = torch.sum(fc1_weight ** 2, dim=1).t()  # [i, j]
-        h = -torch.slogdet(s * self.I - A)[1] + self.d * np.log(s)
-        return h
-
-    def fc1_l1_reg(self) -> torch.Tensor:
-        return torch.sum(torch.abs(self.fc1.weight))
-
-    @torch.no_grad()
-    def fc1_to_adj(self) -> np.ndarray:  # [j * m1, i] -> [i, j]
-        fc1_weight = self.fc1.weight
-        fc1_weight = fc1_weight.view(self.d, -1, self.d)  
-        A = torch.sum(fc1_weight ** 2, dim=1).t() 
-        W = torch.sqrt(A)
-        W = W.cpu().detach().numpy()  # [i, j]
-        return W
 
 
 class DagmaMLP(nn.Module): 
@@ -117,7 +69,7 @@ class DagmaMLP(nn.Module):
         x = x.squeeze(dim=2)
         return x
 
-    def h_func(self, s: float = 1.0) -> torch.Tensor:
+    def h_func(self, method='dagma') -> torch.Tensor:
         r"""
         Constrain 2-norm-squared of fc1 weights along m1 dim to be a DAG
 
@@ -134,7 +86,17 @@ class DagmaMLP(nn.Module):
         fc1_weight = self.fc1.weight
         fc1_weight = fc1_weight.view(self.d, -1, self.d)
         A = torch.sum(fc1_weight ** 2, dim=1).t()  # [i, j]
-        h = -torch.slogdet(s * self.I - A)[1] + self.d * np.log(s)
+
+        if method == 'dagma':
+            h = -torch.slogdet(self.I - A)[1]
+        elif method == 'notears':
+            h = torch.matrix_exp(A) - self.d
+        elif method == 'polynomial': 
+            M = self.I + A / self.d  # (Yu et al. 2019)
+            E = torch.matrix_power(M, self.d - 1)
+            h = (E.t() * M).sum() - self.d
+        else: 
+            raise ValueError('Method is "dagma", "notears", or "polynomial".')
         return h
 
     def fc1_l1_reg(self) -> torch.Tensor:

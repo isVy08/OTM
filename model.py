@@ -11,8 +11,8 @@ def exact_ot_cost(X, Y, cost_fn = 'euclidean'):
     batchsize, _  = X.shape
     unif = torch.ones((batchsize,), device = X.device) / batchsize
     if cost_fn == 'euclidean':
-        # M = torch.cdist(x, y, p=2)
-        M = ot.dist(X, Y)
+        M = torch.cdist(X, Y, p=2)
+        M = torch.sqrt(M)
     else:
         M = torch.zeros((batchsize, batchsize), device = X.device)
         for i in range(batchsize): 
@@ -50,7 +50,7 @@ def rbf_kernel(X, Y):
     return stats / batch_size
 
 class SuperImputer(nn.Module): 
-    def __init__(self, data, mask, hidden_dims, initialized = None):
+    def __init__(self, data, mask, hidden_dims, sem_type, initialized = None):
         super(SuperImputer, self).__init__()
         print('Using Super imputation ...')
         self.D = hidden_dims[0]        
@@ -60,6 +60,7 @@ class SuperImputer(nn.Module):
         self.data = data 
         self.mask = mask
         self.initialized = initialized
+        self.sem_type = sem_type
 
         if initialized == 'learnable':
             imps = (torch.randn(data.shape, device = mask.device) + nanmean(data, 0))[mask.bool()]
@@ -77,44 +78,18 @@ class SuperImputer(nn.Module):
 
     
         logvar = self.var(x)
-        imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
+
+        if self.sem_type == 'sachs' or 'dream' in self.sem_type:
+            imps = self.mu(x) + torch.square(0.5 * logvar) * torch.randn_like(x)
+        else:
+            imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
+        
+        if self.sem_type in ('sachs', 'neuro'):
+            imps = torch.relu(torch.tanh(imps))
+            
         x = imps * self.mask + x
         return x 
 
-class RealImputer(nn.Module): 
-    def __init__(self, data, mask, hidden_dims, initialized = None):
-        super(RealImputer, self).__init__()
-        print('Using Super imputation ...')
-        self.D = hidden_dims[0]        
-        self.mu = MLP(hidden_dims, nn.ReLU())
-        self.var = MLP(hidden_dims, nn.ReLU())
-
-        self.data = data 
-        self.mask = mask
-        self.initialized = initialized
-
-        if initialized == 'learnable':
-            imps = (torch.randn(data.shape, device = mask.device) + nanmean(data, 0))[mask.bool()]
-            self.imps = nn.Parameter(imps)
-    
-    def forward(self): 
-        x = self.data.clone()  
-        if self.initialized is None: # pre-imputed with zeros
-            x[self.mask.bool()] = 0.0
-
-        elif self.initialized == 'learnable':
-            x[self.mask.bool()] = self.imps
-        
-        logvar = self.var(x)
-
-        # (logvar)^2 works better on sachs. 
-        imps = self.mu(x) + torch.exp(0.5 * logvar) * torch.randn_like(x)
-        # imps = self.mu(x) + torch.square(0.5 * logvar) * torch.randn_like(x)
-        
-        imps = torch.relu(torch.tanh(imps))
-        x = imps * self.mask + x
-
-        return x 
 
 class MissModel(nn.Module):
     def __init__(self, data, mask, hidden_dims, device, sem_type, initialized = None):
@@ -125,13 +100,10 @@ class MissModel(nn.Module):
         
         self.scm = DagmaMLP(hidden_dims, device=device, bias=True)
 
-        if sem_type in ("neuro", ) or 'dream' in sem_type:
-            self.imputer = RealImputer(data, mask, [self.d, self.d, self.d], initialized)
-        elif sem_type == 'sachs':
-            self.imputer = RealImputer(data, mask, [self.d, self.d], initialized)
+        if sem_type == 'neuro' or 'dream' in sem_type:
+            self.imputer = SuperImputer(data, mask, [self.d, self.d, self.d], sem_type, initialized)
         else:
-            self.imputer = SuperImputer(data, mask, [self.d, self.d], initialized)
-        
+            self.imputer = SuperImputer(data, mask, [self.d, self.d], sem_type, initialized)
         
         
     def to_adj(self):
@@ -210,13 +182,12 @@ class DagmaNonlinear:
             
             l1_reg = lambda1 * self.model.scm.fc1_l1_reg()
             
-            if self.model.sem_type in ('mlp',):
+            if self.model.sem_type == 'mlp':
                 obj = mu * (score + l1_reg) + h_val + 0.01 * rbf_kernel(Xhat, X)
             else:
-                obj = mu * (score + l1_reg) + h_val + 1.5 * rbf_kernel(Xhat, X)
+                obj = mu * (score + l1_reg) + h_val + 1.5 *  rbf_kernel(Xhat, X)
 
             optimizer.zero_grad()
-            # obj.backward()
             obj.backward(retain_graph=True)
             optimizer.step()
             
@@ -235,8 +206,6 @@ class DagmaNonlinear:
         return True
 
     def fit(self, 
-            # X: typing.Union[torch.Tensor, np.ndarray],
-            # M: typing.Union[torch.Tensor, np.ndarray],
             lambda1: float = .02, 
             lambda2: float = .005,
             T: int = 4, 

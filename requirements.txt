@@ -5,3 +5,5 @@ igraph
 torch
 geomloss
 scikit-learn
+pgmpy==0.1.7
+cdt

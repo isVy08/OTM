@@ -44,8 +44,6 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, eta=0.01):
     def _wfunc(w):
         
         """Evaluate value and gradient of augmented Lagrangian for doubled variables ([2 d^2] array)."""
-        # X = supp.imps.reshape(n,d)
-        # X = supp.X_init * (1 - supp.mask) + X * supp.mask
 
         imps = supp.imps.reshape(d,d)
         X = supp.X_init * (1 - supp.mask) + (supp.X_init @ imps)  * supp.mask
@@ -70,8 +68,6 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, eta=0.01):
     
     def _xfunc(imps):
         
-        # X = imps.reshape(n,d)
-        # X = supp.X_init * (1 - supp.mask) + X * supp.mask
 
         imps = imps.reshape(d, d)
         X = supp.X_init * (1 - supp.mask) + (supp.X_init @ imps) * supp.mask
@@ -87,9 +83,6 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, eta=0.01):
         # Calculating gradient
         I = np.eye(d,d)
         g_obj = 1.0 / X.shape[0] * (R @ (I - W.T)) * supp.mask
-        # g_obj = g_obj.reshape(-1,)  + eta * G.reshape(-1,)
-
-        # print(g_obj.shape, G.shape)
         g_obj = (supp.X_init.T @ g_obj) + eta * (supp.X_init.T @ G)
         g_obj = g_obj.reshape(-1)
 
@@ -100,7 +93,6 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, eta=0.01):
     w_est = np.zeros(2 * d * d)
     
     rho, alpha, h = 1.0, 0.0, np.inf 
-    # imps = np.ones(n * d)
     imps = np.ones(d * d)
     
     wbnds = [(0, 0) if i == j else (0, None) for _ in range(2) for i in range(d) for j in range(d)]
@@ -131,19 +123,14 @@ def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, eta=0.01):
         print(f'Current h={h}')
         
         alpha += rho * h
-        # if rho >= rho_max:
-        #     print('Resetting rho')
-        #     rho = 1.0
         if h <= h_tol or rho >= rho_max:
             print(f'Stopping at h={h} and rho={rho}')
             break
     
     W_est = _adj(w_est)
-    # imps = imps.reshape(n,d)
 
     imps = imps.reshape(d,d)
     X_filled = supp.X_init * (1 - supp.mask) + (supp.X_init @ imps) * supp.mask
-    # W_est[np.abs(W_est) < w_threshold] = 0
     return W_est, X_filled, supp.mask
 
 
@@ -153,10 +140,10 @@ if __name__ == '__main__':
 
     
     config_id = int(sys.argv[1])
-    graph_type = sys.argv[2] # ER, SF
-    sem_type = sys.argv[3] # linear
-    version = sys.argv[4] 
-    dataset, config = get_data(config_id, graph_type, sem_type, version)
+    graph_type = sys.argv[2]
+    sem_type = 'linear'
+    
+    dataset, config = get_data(config_id, graph_type, sem_type)
     
     n,d = dataset.X.shape
 
@@ -164,26 +151,10 @@ if __name__ == '__main__':
                                 max_iter=10, h_tol=1e-8, rho_max=1e+16, eta=0.01)
  
     raw_result = evaluate(dataset.B_bin, W_est, threshold = 0.3)
-    from utils.missing import MAE, RMSE
-    mae = MAE(X_filled, dataset.X_true, mask)
-    rmse = RMSE(X_filled, dataset.X_true, mask)
-    print(mae, rmse)
 
     
     # =============== WRITE GRAPH ===============
-    saved_path = f'output/{version}/otm_linear.txt'
+    saved_path = f'output/otm_linear.txt'
     write_result(raw_result, config['code'], saved_path)
-
-
-    
-
-    # =============== WRITE IMPUTATION ===============
-    file = open(f'output/{version}/otm_linear_imputation.txt', 'a+')
-    file.write(f'{config["code"]}\n')
-    file.write(f'MAE: {mae}, RMSE: {rmse}\n')
-    file.write('======================\n')
-    file.close()
-
-
 
 

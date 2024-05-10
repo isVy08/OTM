@@ -23,10 +23,12 @@ colors = {'otm': "red",
           "mean": "green",
           "sk": "grey",
           "lin-rr": "orange", 
-          "iterative": "purple"}
+          "iterative": "purple", 
+          "missforest": 'pink'}
 
 names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
-         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
+         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer',
+         'missforest': 'MissForest'}
 
 
 def plot_sim(mst, exp):
@@ -37,6 +39,7 @@ def plot_sim(mst, exp):
         cols = [('mlp','ER'), ('mlp','SF'), ('mim','ER'), ('mim','SF')]
         ncols = len(cols)
         fig, axs = plt.subplots(nrows, ncols, figsize=(20, 7), sharex=True)
+        
     else:
         cols = [('sachs','REAL'), ('dream','REAL'), ('neuro','REAL')]
         ncols = len(cols)
@@ -84,15 +87,16 @@ def plot_sim(mst, exp):
                
                 barwidth = 0.40
 
-                if sem_type in ("sachs", "neuro"):
-                    errs = np.array(errs) * 0.5
-                elif sem_type == "dream":
-                    errs = np.array(errs) * 0.1
-                elif sem_type == "linear" and metric == "shd":
-                    errs = np.array(errs) * 0.2
+                errs = np.array(errs)
+                
+                if sem_type == "dream":
+                    errs *= 0.1
+                
+                elif metric == 'F1':
+                    errs *= 0.5
 
                 if method == "missdag" and graph_type == "REAL":
-                    errs = errs + 0.2
+                    errs += 0.2
             
                 axs[r,c].bar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, width=barwidth, label=names[method])
                 # axs[r,c].errorbar(np.array([1, 4, 7]) + w , means, yerr=errs, color=color, linewidth=2.0, marker='o', label=names[method])
@@ -110,13 +114,13 @@ def plot_sim(mst, exp):
                 axs[r,c].set_xlabel("Missing rate", fontsize='x-large')
                   
     if len(cols) == 4:
-        axs[1,2].legend(bbox_to_anchor=[1.2, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
+        axs[1,2].legend(bbox_to_anchor=[1.2, -0.4, 0.2, 0.2], ncol=len(colors), fontsize='x-large')
+        
     else:
-        axs[1,1].legend(bbox_to_anchor=[1.5, -0.4, 0.2, 0.2], ncol=6, fontsize='x-large')
+        axs[1,2].legend(bbox_to_anchor=[0.70, -0.4, 0.2, 0.2], ncol=len(colors), fontsize='x-large')
     
     
     fig.savefig(f'figures/{exp}-{mst}.pdf', bbox_inches='tight')
-    # fig.savefig(f'figures/test', bbox_inches='tight')
 
 
 
@@ -127,7 +131,3 @@ exp = sys.argv[1]
 
 for mst in ('MCAR', 'MAR', 'MNAR'):
     plot_sim(mst, exp)
-
-
-# plot_sim('MAR', exp)
-# plot_sim('MNAR')

@@ -73,9 +73,6 @@ class SyntheticDataset:
                     self.B_bin, self.n, self.sem_type, self.equal_variances)
             assert is_dag(self.B)
 
-            # Create missed data
-            # self.X_true = scale(self.X_true)
-
             self.X, self.mask = produce_NA(self.X_true.copy(), p_miss=self.miss_percent, mecha=self.miss_type,
                                         opt=self.mnar_type, p_obs=self.p_obs, q=self.mnar_quantile_q)
             

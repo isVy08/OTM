@@ -15,10 +15,12 @@ colors = {'otm': "red",
           "mean": "green",
           "sk": "grey",
           "lin-rr": "orange", 
-          "iterative": "purple"}
+          "iterative": "purple", 
+          "missforest": 'pink'}
 
 names = {'otm': 'OTM', 'missdag': 'MissDAG', 'mean': 'Mean Imputer', 
-         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer'}
+         'sk': 'OT Imputer (SK)', 'lin-rr': 'OT Imputer (RR)', 'iterative': 'Iterative Imputer',
+         'missforest': 'MissForest'}
 
 
 def extract_baseline(output, graph_path, imp_path, sem_type):
@@ -63,8 +65,9 @@ def extract_baseline(output, graph_path, imp_path, sem_type):
 
 def plot_intro():
     # from parse import extract_otm_missdag
-    local_colors = { "mean": "green", "sk": "orange", "iterative": "purple", "complete": None}
-    local_names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer', "complete": "Complete data"}
+    local_colors = { "mean": "green", "sk": "orange", "iterative": "purple", "complete": None, 'missforest': 'pink'}
+    local_names = {'mean': 'Mean Imputer', 'sk': 'OT Imputer', 'iterative': 'Iterative Imputer', 
+                   "complete": "Complete data", 'missforest': 'MissForest'}
 
     output = load_pickle('output/mlp.pickle')
     from parse import extract_otm_missdag
@@ -100,7 +103,7 @@ def plot_intro():
                 if method == 'complete':
                     # means = [np.mean(np.array(complete[code][method][metric])*rate) for code in codes]
                     if r == 1:
-                        axs[r,c].hlines(y = 95, xmin=0.8, xmax=8, linestyle='--', label="Complete data", linewidth=2.0)
+                        axs[r,c].hlines(y = 95, xmin=0.8, xmax=9, linestyle='--', label="Complete data", linewidth=2.0)
                 else:
                     means = [np.mean(np.array(output[code][method][metric])*rate) for code in codes]
                     errs = [np.std(np.array(output[code][method][metric])*rate) for code in codes]
@@ -122,14 +125,14 @@ def plot_intro():
             
             
 
-    axs[1,1].legend(bbox_to_anchor=[1.7, -0.42, 0.2, 0.2], ncol=4, fontsize='xx-large')
+    axs[1,1].legend(bbox_to_anchor=[1.93, -0.42, 0.2, 0.2], ncol=len(local_colors), fontsize='xx-large')
     # fig.savefig(f'figures/test.png', bbox_inches='tight')
     fig.savefig(f'figures/intro.pdf', bbox_inches='tight')
 
 def plot_linear():
     output = load_pickle(f'output/linear.pickle')
    
-    fig, axs = plt.subplots(2,2, figsize=(14, 7), sharex=True)
+    fig, axs = plt.subplots(2,2, figsize=(15, 7), sharex=True)
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
     barwidth = 0.35
@@ -166,9 +169,7 @@ def plot_linear():
                     metric_name = metric.upper()
                 axs[r,c].set_ylabel(metric_name, fontsize='xx-large')
                 
-    
-    # axs[1,1].legend(bbox_to_anchor=[0.3, -0.32, 0.2, 0.2], ncol=3, fontsize='x-large')
-    axs[1,1].legend(bbox_to_anchor=[0.87, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
+        axs[1,1].legend(bbox_to_anchor=[0.95, -0.32, 0.2, 0.2], ncol=len(colors), fontsize='x-large')
     fig.savefig(f'figures/linear.pdf', bbox_inches='tight')
 
 def extract_runtime(config):
@@ -207,6 +208,7 @@ def extract_runtime(config):
     return output
 
 def plot_scalability():
+    del colors['mean']
     # fig, axs = plt.subplots(1, 3, figsize=(15, 5))
     plt.tight_layout(pad=5.0, w_pad=1.0, h_pad=1.2)
     config = {27:20, 28:30, 29:40, 30:50, 31:100, 32:200}
@@ -308,7 +310,7 @@ def plot_ablation():
     mlp_output = load_pickle(f'output/mlp.pickle')
     output['MLP-ER1'] = mlp_output['MLP-ER1']
    
-    fig, axs = plt.subplots(2,2, figsize=(15, 7))
+    fig, axs = plt.subplots(2,2, figsize=(16, 7))
     fig.tight_layout(pad=4.0, w_pad=1.0, h_pad=0.8)
 
     barwidth = 0.35
@@ -352,7 +354,7 @@ def plot_ablation():
 
             
     
-    axs[1,1].legend(bbox_to_anchor=[0.80, -0.32, 0.2, 0.2], ncol=6, fontsize='x-large')
+    axs[1,1].legend(bbox_to_anchor=[0.85, -0.32, 0.2, 0.2], ncol=len(colors), fontsize='x-large')
     fig.savefig(f'figures/ablation.pdf')
 
 
@@ -360,5 +362,5 @@ def plot_ablation():
 # plot_scalability()
 # plot_intro()
 # plot_quali()
-# plot_ablation()
-plot_linear()
+plot_ablation()
+# plot_linear()
