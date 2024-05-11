@@ -90,7 +90,7 @@ class DagmaMLP(nn.Module):
         if method == 'dagma':
             h = -torch.slogdet(self.I - A)[1]
         elif method == 'notears':
-            h = torch.matrix_exp(A) - self.d
+            h = torch.trace(torch.matrix_exp(A)) - self.d
         elif method == 'polynomial': 
             M = self.I + A / self.d  # (Yu et al. 2019)
             E = torch.matrix_power(M, self.d - 1)

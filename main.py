@@ -22,7 +22,7 @@ N, D = data.shape
 hidden_dims = [D, D, 1]
 
 
-from model import MissModel, DagmaNonlinear
+from nonlinear import MissModel, DagmaNonlinear
 data = data.double()
 mask = mask.double()
 miss_model = MissModel(data, mask, hidden_dims, device, sem_type, initialized = None)
