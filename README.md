@@ -29,7 +29,7 @@ A dataset will be automatically generated if it has not been done so in the prev
 
 For the linear case, OTM runs on [NOTEARS](https://arxiv.org/abs/1803.01422), which uses L-BFGS-B optimizer. 
 ```
-python linear_solver.py 1 ER
+python linear.py 1 ER
 ```
 ## Baseline methods
 Use `miss_baselines.py` to run the imputation baselines. It first imputes the missing data and runs DAGMA for non-linear causal discovery and NOTEARs for linear case. 

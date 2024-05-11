@@ -7,8 +7,6 @@ from utils.eval import evaluate, write_result
 from tqdm import tqdm
 from ot_gradient import auto_ot
 
-from miss_methods.miss_dag_nonlinear import mean_imputation
-
 def otm(X_init, lambda1, max_iter=100, h_tol=1e-8, rho_max=1e+16, eta=0.01):
     class Sup: 
         def __init__(self, X_init):
