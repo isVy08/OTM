@@ -69,7 +69,7 @@ class DagmaMLP(nn.Module):
         x = x.squeeze(dim=2)
         return x
 
-    def h_func(self, method='dagma') -> torch.Tensor:
+    def h_func(self, s: float = 1.0) -> torch.Tensor:
         r"""
         Constrain 2-norm-squared of fc1 weights along m1 dim to be a DAG
 
@@ -86,17 +86,7 @@ class DagmaMLP(nn.Module):
         fc1_weight = self.fc1.weight
         fc1_weight = fc1_weight.view(self.d, -1, self.d)
         A = torch.sum(fc1_weight ** 2, dim=1).t()  # [i, j]
-
-        if method == 'dagma':
-            h = -torch.slogdet(self.I - A)[1]
-        elif method == 'notears':
-            h = torch.trace(torch.matrix_exp(A)) - self.d
-        elif method == 'polynomial': 
-            M = self.I + A / self.d  # (Yu et al. 2019)
-            E = torch.matrix_power(M, self.d - 1)
-            h = (E.t() * M).sum() - self.d
-        else: 
-            raise ValueError('Method is "dagma", "notears", or "polynomial".')
+        h = -torch.slogdet(s * self.I - A)[1] + self.d * np.log(s)
         return h
 
     def fc1_l1_reg(self) -> torch.Tensor:
