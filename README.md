@@ -42,4 +42,21 @@ To run MissDAG, refer to `missdag.py`. The codes are taken from [MissDAG repo](h
 ## Citation
 If you use the codes or datasets in this repository, please cite our paper.
 
+```
+@InProceedings{pmlr-v235-vo24b,
+  title = 	 {Optimal Transport for Structure Learning Under Missing Data},
+  author =       {Vo, Vy and Zhao, He and Le, Trung and Bonilla, Edwin V. and Phung, Dinh},
+  booktitle = 	 {Proceedings of the 41st International Conference on Machine Learning},
+  pages = 	 {49605--49626},
+  year = 	 {2024},
+  editor = 	 {Salakhutdinov, Ruslan and Kolter, Zico and Heller, Katherine and Weller, Adrian and Oliver, Nuria and Scarlett, Jonathan and Berkenkamp, Felix},
+  volume = 	 {235},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {21--27 Jul},
+  publisher =    {PMLR},
+  pdf = 	 {https://raw.githubusercontent.com/mlresearch/v235/main/assets/vo24b/vo24b.pdf},
+  url = 	 {https://proceedings.mlr.press/v235/vo24b.html},
+  abstract = 	 {Causal discovery in the presence of missing data introduces a chicken-and-egg dilemma. While the goal is to recover the true causal structure, robust imputation requires considering the dependencies or, preferably, causal relations among variables. Merely filling in missing values with existing imputation methods and subsequently applying structure learning on the complete data is empirically shown to be sub-optimal. To address this problem, we propose a score-based algorithm for learning causal structures from missing data based on optimal transport. This optimal transport viewpoint diverges from existing score-based approaches that are dominantly based on expectation maximization. We formulate structure learning as a density fitting problem, where the goal is to find the causal model that induces a distribution of minimum Wasserstein distance with the observed data distribution. Our framework is shown to recover the true causal graphs more effectively than competing methods in most simulations and real-data settings. Empirical evidence also shows the superior scalability of our approach, along with the flexibility to incorporate any off-the-shelf causal discovery methods for complete data.}
+}
+```
 
